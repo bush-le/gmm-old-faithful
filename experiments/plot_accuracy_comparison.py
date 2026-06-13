@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import itertools
 
 # Thêm đường dẫn gốc của project vào sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -12,35 +13,36 @@ from src.em import fit_gmm
 from src.kmeans import fit_kmeans
 
 def main():
-    # 1. Tạo dữ liệu giả lập (Synthetic Data) với 2 cụm hình elip chồng lấp
-    np.random.seed(42)
-    # Cụm 0: Hình elip kéo dài
-    mean0 = np.array([-1.0, -1.0])
-    cov0 = np.array([[6.0, 4.5], [4.5, 5.0]])
-    X0 = np.random.multivariate_normal(mean0, cov0, 350)
+    # 1. Tải dữ liệu Iris
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "processed", "iris_clean.csv")
+    X = np.loadtxt(data_path, delimiter=',', skiprows=1)
     
-    # Cụm 1: Hình elip kéo dài hướng khác
-    mean1 = np.array([4.0, -2.0])
-    cov1 = np.array([[2.5, -1.5], [-1.5, 3.0]])
-    X1 = np.random.multivariate_normal(mean1, cov1, 350)
-    
-    X = np.vstack([X0, X1])
-    # Tạo nhãn gốc (Ground Truth)
-    y_true = np.concatenate([np.zeros(350), np.ones(350)]).astype(int)
+    # Tạo nhãn gốc (Ground Truth) cho 150 mẫu (50 Setosa, 50 Versicolor, 50 Virginica)
+    y_true = np.concatenate([np.zeros(50), np.ones(50), np.ones(50) * 2]).astype(int)
 
     # 2. Huấn luyện thuật toán K-Means
-    km_labels, km_centroids = fit_kmeans(X, K=2, max_iters=100, seed=42)
+    km_labels, km_centroids = fit_kmeans(X, K=3, max_iters=100, seed=42)
     
     # 3. Huấn luyện thuật toán GMM
-    gmm_params, gmm_resp, _, _ = fit_gmm(X, K=2, max_iters=100, tol=1e-6, reg_covar=1e-6, init_method="kmeans", seed=42)
+    gmm_params, gmm_resp, _, _ = fit_gmm(X, K=3, max_iters=100, tol=1e-6, reg_covar=1e-6, init_method="kmeans", seed=42)
     gmm_labels = np.argmax(gmm_resp, axis=1)
 
     # 4. Căn chỉnh nhãn (Bởi vì thuật toán không giám sát có thể bị đảo ngược nhãn ngẫu nhiên)
-    if np.mean(km_labels == y_true) < 0.5:
-        km_labels = 1 - km_labels
-        
-    if np.mean(gmm_labels == y_true) < 0.5:
-        gmm_labels = 1 - gmm_labels
+    def align_labels(labels, y_true):
+        best_acc = 0
+        best_labels = labels
+        for perm in itertools.permutations([0, 1, 2]):
+            mapped_labels = np.zeros_like(labels)
+            for i, p in enumerate(perm):
+                mapped_labels[labels == i] = p
+            acc = np.mean(mapped_labels == y_true)
+            if acc > best_acc:
+                best_acc = acc
+                best_labels = mapped_labels
+        return best_labels
+
+    km_labels = align_labels(km_labels, y_true)
+    gmm_labels = align_labels(gmm_labels, y_true)
 
     # 5. Tính toán tỉ lệ chính xác (Accuracy %)
     km_accuracy = np.mean(km_labels == y_true) * 100
@@ -68,7 +70,7 @@ def main():
                 ha='center', va='bottom', fontsize=12, fontweight='bold')
         
     # Chú thích giải thích nguyên nhân
-    caption = "Synthetic data generated from overlapping multivariate Gaussian distributions (ellipsoidal).\nGMM achieves significantly higher accuracy by modeling the covariance matrix,\nwhereas K-Means relies only on hard Euclidean distance."
+    caption = "Performance on the Iris dataset (4 features, 3 classes).\nGMM provides a more flexible probabilistic model compared to K-Means,\nbetter capturing the overlapping clusters and varying densities of the classes."
     plt.figtext(0.5, -0.06, caption, ha="center", fontsize=10, style='italic',
                 bbox=dict(facecolor='#F8F9F9', edgecolor='#BDC3C7', boxstyle='round,pad=0.8'))
 
