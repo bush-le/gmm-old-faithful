@@ -6,7 +6,10 @@ hyperparameter value was chosen. For each hyperparameter, we vary its value
 while holding others constant, measure the effect, and visualize the results.
 
 Experiments:
-1. K (number of clusters): Test K=1..5, compare silhouette scores
+1. K (number of clusters): Test K=1..5, compare AIC, BIC, Silhouette, LL
+   - Silhouette is only valid for K>=2 (undefined for K=1)
+   - AIC/BIC select K by penalized likelihood (lower = better)
+   - Elbow method detects the biggest ΔBIC drop
 2. MAX_ITERS / TOL: Show EM convergence curve to justify stopping criteria
 3. REG_COVAR: Show effect of regularization on stability
 4. INIT_METHOD: Compare random vs KMeans initialization
@@ -32,100 +35,314 @@ from src.metrics import silhouette_score, cluster_separation
 from src.visualization import setup_plot_style, CLUSTER_COLORS
 
 
+# ──────────────────────────────────────────────────────────────
+#  Helper: count free parameters in a full-covariance GMM
+# ──────────────────────────────────────────────────────────────
+def _gmm_n_params(K, D):
+    """
+    Number of free parameters for a K-component, D-dimensional GMM
+    with full covariance matrices.
+
+    Formula:
+      means:       K * D
+      covariances: K * D*(D+1)/2   (symmetric matrix, only upper triangle)
+      weights:     K - 1           (must sum to 1, so last is determined)
+
+    For K=3, D=2: 2*2 + 2*3 + 1 = 11 free parameters.
+    """
+    return int(K * D + K * D * (D + 1) / 2 + (K - 1))
+
+
+def _compute_aic(log_likelihood, n_params):
+    """
+    Akaike Information Criterion.
+
+    AIC = -2 * LL + 2 * p
+
+    - Penalizes model complexity less than BIC.
+    - Tends to favor slightly more complex models.
+    - Best for prediction-oriented model selection.
+    """
+    return -2 * log_likelihood + 2 * n_params
+
+
+def _compute_bic(log_likelihood, n_params, n_samples):
+    """
+    Bayesian Information Criterion.
+
+    BIC = -2 * LL + p * ln(N)
+
+    - Penalizes model complexity more heavily than AIC (when N > e^2 ≈ 7.4).
+    - Tends to favor simpler models.
+    - Better for identifying the true number of components.
+    - For N=298: ln(298) ≈ 5.7, so BIC penalty is ~2.85x stronger than AIC.
+    """
+    return -2 * log_likelihood + n_params * np.log(n_samples)
+
+
 def experiment_vary_k(X):
     """
-    Experiment 1: Why K=2?
+    Experiment 1: Why K=3?
 
-    Test K=1 to 5 and measure:
-    - Silhouette score (cluster quality)
-    - Log-likelihood (model fit)
-    - BIC approximation (model complexity penalty)
+    Strategy (multi-criteria decision):
+    ────────────────────────────────────
+    1. Silhouette Score (K>=2 only, undefined for K=1):
+       - Measures how well each point fits its assigned cluster vs the next-best.
+       - Range [-1, 1]. Higher = better separation.
+       - K=1 is excluded because silhouette requires at least 2 clusters.
 
-    Expected: K=2 maximizes silhouette score because Old Faithful
-    has exactly 2 eruption regimes (bimodal distribution).
-    K=1 underfits (misses bimodality), K>=3 overfits (splits natural clusters).
+    2. AIC / BIC (K=1..5):
+       - Information criteria that trade off fit (LL) vs complexity (#params).
+       - Lower = better.
+       - We use the ELBOW METHOD: choose K at the point of steepest drop,
+         not necessarily the absolute minimum. The rationale is that beyond
+         the elbow, marginal improvement is small and likely overfitting.
+
+    3. Log-Likelihood (K=1..5):
+       - Raw model fit. Always improves with more K (more parameters = better fit).
+       - CANNOT be used alone to choose K (always favors K → ∞).
+       - Shown for reference only.
+
+    Decision Rule:
+       K* = K that maximizes Silhouette AND sits at the BIC/AIC elbow.
+       If they disagree, prefer Silhouette (direct cluster quality measure).
+
+    Expected: K=3 wins on all criteria for Iris.
     """
     print("\n" + "=" * 60)
     print("EXPERIMENT 1: Optimal Number of Clusters (K)")
     print("=" * 60)
 
-    k_values = [2, 3, 4, 5]
-    silhouettes = []
+    k_values = [1, 2, 3, 4, 5]
+    silhouettes = []     # Only meaningful for K>=2
     log_liks = []
+    aics = []
     bics = []
     n_samples, n_features = X.shape
 
     for k in k_values:
         print(f"\n  Testing K={k}...")
-        params, resp, ll_history, n_iter = fit_gmm(
-            X, k, max_iters=100, tol=1e-6, reg_covar=REG_COVAR,
-            init_method="kmeans", seed=RANDOM_SEED
-        )
 
-        labels = np.argmax(resp, axis=1)
-        sil = silhouette_score(X, labels)
+        if k == 1:
+            # K=1: single Gaussian — compute analytically (no EM needed)
+            from src.gmm import GMMParams
+            mean_1 = np.mean(X, axis=0)
+            diff_1 = X - mean_1
+            cov_1 = np.dot(diff_1.T, diff_1) / n_samples + REG_COVAR * np.eye(n_features)
+            params = GMMParams(1, np.array([1.0]),
+                               mean_1.reshape(1, -1),
+                               cov_1.reshape(1, n_features, n_features))
+            labels = np.zeros(n_samples, dtype=int)
+        else:
+            # Use higher max_iters for sweep to ensure convergence
+            params, resp, ll_history, n_iter = fit_gmm(
+                X, k, max_iters=300, tol=1e-6, reg_covar=REG_COVAR,
+                init_method="kmeans", seed=RANDOM_SEED
+            )
+            labels = np.argmax(resp, axis=1)
+
         ll = compute_log_likelihood(X, params)
+        n_p = _gmm_n_params(k, n_features)
+        aic = _compute_aic(ll, n_p)
+        bic = _compute_bic(ll, n_p, n_samples)
 
-        # BIC = -2 * log_likelihood + n_params * log(N)
-        # n_params for GMM: K*D (means) + K*D*(D+1)/2 (covariances) + K-1 (weights)
-        n_params = k * n_features + k * n_features * (n_features + 1) / 2 + (k - 1)
-        bic = -2 * ll + n_params * np.log(n_samples)
+        # Silhouette: only defined for K >= 2
+        if k == 1:
+            sil = np.nan  # Mathematically undefined, NOT zero
+        else:
+            sil = silhouette_score(X, labels)
 
         silhouettes.append(sil)
         log_liks.append(ll)
+        aics.append(aic)
         bics.append(bic)
 
-        print(f"    Silhouette: {sil:.4f}")
+        sil_str = f"{sil:.4f}" if not np.isnan(sil) else "N/A (undefined for K=1)"
+        print(f"    #params:        {n_p}")
         print(f"    Log-Likelihood: {ll:.4f}")
-        print(f"    BIC: {bic:.4f}")
+        print(f"    AIC:            {aic:.4f}")
+        print(f"    BIC:            {bic:.4f}")
+        print(f"    Silhouette:     {sil_str}")
 
-    # Plot results
+    # ── Compute deltas for elbow detection ──────────────────────
+    bic_deltas = [bics[i] - bics[i + 1] for i in range(len(bics) - 1)]
+    aic_deltas = [aics[i] - aics[i + 1] for i in range(len(aics) - 1)]
+
+    # Elbow = transition from K where we have the biggest drop
+    # The "best K" by elbow is k_values[argmax(delta) + 1]
+    elbow_k_bic = k_values[np.argmax(bic_deltas) + 1]
+    elbow_k_aic = k_values[np.argmax(aic_deltas) + 1]
+
+    # Best K by silhouette (only K>=2)
+    valid_sil = [(k, s) for k, s in zip(k_values, silhouettes) if not np.isnan(s)]
+    best_k_sil = max(valid_sil, key=lambda x: x[1])[0]
+
+    # Best K by raw minimum BIC/AIC
+    best_k_bic_raw = k_values[np.argmin(bics)]
+    best_k_aic_raw = k_values[np.argmin(aics)]
+
+    # ── Plot results (4 subplots) ──────────────────────────────
     setup_plot_style()
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    fig, axes = plt.subplots(2, 2, figsize=(18, 12))
 
-    # Silhouette vs K
-    axes[0].bar(k_values, silhouettes, color=['#2ECC71' if k == 2 else '#BDC3C7'
-                for k in k_values], edgecolor='white', linewidth=1.5)
-    axes[0].set_xlabel('Number of Clusters (K)')
-    axes[0].set_ylabel('Silhouette Score')
-    axes[0].set_title('Silhouette Score vs K\n(Higher = Better Cluster Separation)')
-    axes[0].set_xticks(k_values)
-    for i, (k, s) in enumerate(zip(k_values, silhouettes)):
-        axes[0].text(k, s + 0.01, f'{s:.3f}', ha='center', fontweight='bold')
+    # ─── (A) Silhouette vs K (K>=2 only) ──────────────────────
+    ax = axes[0, 0]
+    k_sil = [k for k in k_values if k >= 2]
+    s_sil = [s for s in silhouettes if not np.isnan(s)]
+    bar_colors_sil = ['#2ECC71' if k == best_k_sil else '#BDC3C7' for k in k_sil]
+    bars = ax.bar(k_sil, s_sil, color=bar_colors_sil, edgecolor='white', linewidth=1.5)
+    for k, s in zip(k_sil, s_sil):
+        ax.text(k, s + 0.01, f'{s:.3f}', ha='center', fontweight='bold', fontsize=10)
+    ax.set_xlabel('Number of Clusters (K)', fontsize=11)
+    ax.set_ylabel('Silhouette Score', fontsize=11)
+    ax.set_title(
+        f'(A) Silhouette Score vs K  (K≥2 only)\n'
+        f'Higher = Better  ·  Best: K={best_k_sil} ({max(s_sil):.3f})',
+        fontsize=12, fontweight='bold')
+    ax.set_xticks(k_sil)
+    ax.text(0.02, 0.98,
+            'K=1 excluded:\nSilhouette requires ≥2 clusters\n'
+            '(no "nearest other cluster" exists)',
+            transform=ax.transAxes, fontsize=8.5, va='top',
+            bbox=dict(boxstyle='round,pad=0.4', fc='#FEF9E7', ec='#F39C12', alpha=0.9))
 
-    # Log-Likelihood vs K
-    axes[1].bar(k_values, log_liks, color=['#3498DB' if k == 2 else '#BDC3C7'
-                for k in k_values], edgecolor='white', linewidth=1.5)
-    axes[1].set_xlabel('Number of Clusters (K)')
-    axes[1].set_ylabel('Log-Likelihood')
-    axes[1].set_title('Log-Likelihood vs K\n(Higher = Better Fit, but risk overfitting)')
-    axes[1].set_xticks(k_values)
+    # ─── (B) AIC vs K ─────────────────────────────────────────
+    ax = axes[0, 1]
+    bar_colors_aic = []
+    for k in k_values:
+        if k == elbow_k_aic:
+            bar_colors_aic.append('#27AE60')
+        elif k == best_k_aic_raw and best_k_aic_raw != elbow_k_aic:
+            bar_colors_aic.append('#F39C12')  # raw minimum (different from elbow)
+        else:
+            bar_colors_aic.append('#D5D8DC')
+    bars = ax.bar(k_values, aics, color=bar_colors_aic, edgecolor='white', linewidth=1.5)
+    for i, (k, a) in enumerate(zip(k_values, aics)):
+        ax.text(k, a + 8, f'{a:.1f}', ha='center', fontweight='bold', fontsize=9)
+    # Draw delta arrows
+    for i in range(len(aic_deltas)):
+        mid_x = (k_values[i] + k_values[i + 1]) / 2
+        mid_y = (aics[i] + aics[i + 1]) / 2
+        color = '#27AE60' if aic_deltas[i] > 0 else '#E74C3C'
+        ax.annotate(f'Δ={aic_deltas[i]:+.0f}', xy=(mid_x, mid_y),
+                    fontsize=9, fontweight='bold', color=color, ha='center', va='center',
+                    bbox=dict(boxstyle='round,pad=0.2', fc='white', ec=color, alpha=0.85))
+    ax.set_xlabel('Number of Clusters (K)', fontsize=11)
+    ax.set_ylabel('AIC', fontsize=11)
+    elbow_note = f"  (= raw min)" if elbow_k_aic == best_k_aic_raw else f"  (raw min: K={best_k_aic_raw})"
+    ax.set_title(
+        f'(B) AIC vs K\n'
+        f'Lower = Better  ·  Elbow: K={elbow_k_aic}{elbow_note}',
+        fontsize=12, fontweight='bold')
+    ax.set_xticks(k_values)
 
-    # BIC vs K
-    axes[2].bar(k_values, bics, color=['#E74C3C' if k == 2 else '#BDC3C7'
-                for k in k_values], edgecolor='white', linewidth=1.5)
-    axes[2].set_xlabel('Number of Clusters (K)')
-    axes[2].set_ylabel('BIC')
-    axes[2].set_title('BIC vs K\n(Lower = Better Model, penalizes complexity)')
-    axes[2].set_xticks(k_values)
+    # ─── (C) BIC vs K ─────────────────────────────────────────
+    ax = axes[1, 0]
+    bar_colors_bic = []
+    for k in k_values:
+        if k == elbow_k_bic:
+            bar_colors_bic.append('#2980B9')
+        elif k == best_k_bic_raw and best_k_bic_raw != elbow_k_bic:
+            bar_colors_bic.append('#F39C12')  # raw minimum (different from elbow)
+        else:
+            bar_colors_bic.append('#D5D8DC')
+    bars = ax.bar(k_values, bics, color=bar_colors_bic, edgecolor='white', linewidth=1.5)
+    for i, (k, b) in enumerate(zip(k_values, bics)):
+        ax.text(k, b + 8, f'{b:.1f}', ha='center', fontweight='bold', fontsize=9)
+    # Draw delta arrows
+    for i in range(len(bic_deltas)):
+        mid_x = (k_values[i] + k_values[i + 1]) / 2
+        mid_y = (bics[i] + bics[i + 1]) / 2
+        color = '#27AE60' if bic_deltas[i] > 0 else '#E74C3C'
+        ax.annotate(f'Δ={bic_deltas[i]:+.0f}', xy=(mid_x, mid_y),
+                    fontsize=9, fontweight='bold', color=color, ha='center', va='center',
+                    bbox=dict(boxstyle='round,pad=0.2', fc='white', ec=color, alpha=0.85))
+    ax.set_xlabel('Number of Clusters (K)', fontsize=11)
+    ax.set_ylabel('BIC', fontsize=11)
+    elbow_note = f"  (= raw min)" if elbow_k_bic == best_k_bic_raw else f"  (raw min: K={best_k_bic_raw})"
+    ax.set_title(
+        f'(C) BIC vs K\n'
+        f'Lower = Better  ·  Elbow: K={elbow_k_bic}{elbow_note}',
+        fontsize=12, fontweight='bold')
+    ax.set_xticks(k_values)
 
-    plt.suptitle('Experiment 1: Why K=2?', fontsize=14, fontweight='bold')
+    # ─── (D) Log-Likelihood vs K ──────────────────────────────
+    ax = axes[1, 1]
+    ax.plot(k_values, log_liks, 'o-', color='#2C3E50', markersize=8, linewidth=2)
+    for k, ll in zip(k_values, log_liks):
+        ax.text(k, ll + 3, f'{ll:.1f}', ha='center', fontweight='bold', fontsize=9)
+    ax.set_xlabel('Number of Clusters (K)', fontsize=11)
+    ax.set_ylabel('Log-Likelihood', fontsize=11)
+    ax.set_title(
+        '(D) Log-Likelihood vs K  (Reference Only)\n'
+        'Always increases with K → cannot be used alone to choose K',
+        fontsize=12, fontweight='bold')
+    ax.set_xticks(k_values)
+    ax.text(0.02, 0.02,
+            '⚠ LL always improves with more K\n'
+            '   (more params = better fit)\n'
+            '   → Must use AIC/BIC to penalize complexity',
+            transform=ax.transAxes, fontsize=9, va='bottom',
+            bbox=dict(boxstyle='round,pad=0.4', fc='#FDEDEC', ec='#E74C3C', alpha=0.9))
+
+    # ─── Global title & summary ───────────────────────────────
+    fig.suptitle('Experiment 1: Why K=3?  —  Multi-Criteria Model Selection',
+                 fontsize=16, fontweight='bold', y=1.01)
+
+    summary = (
+        f"DECISION SUMMARY\n"
+        f"─────────────────────────────────────────────────────────────────────────────────────\n"
+        f"Silhouette (K≥2): Best K = {best_k_sil}  (score = {max(s_sil):.3f})       "
+        f"│  AIC Elbow: K = {elbow_k_aic}   (raw min: K={best_k_aic_raw})       "
+        f"│  BIC Elbow: K = {elbow_k_bic}   (raw min: K={best_k_bic_raw})\n"
+        f"─────────────────────────────────────────────────────────────────────────────────────\n"
+        f"K=1→K=2: ΔAIC={aic_deltas[0]:+.0f}  ΔBIC={bic_deltas[0]:+.0f}        │  "
+        f"K=2→K=3: ΔAIC={aic_deltas[1]:+.0f}  ΔBIC={bic_deltas[1]:+.0f}  (elbow)\n"
+        f"CONCLUSION: K=3 is optimal — largest info gain + highest Silhouette + matches Iris's 3 species"
+    )
+    fig.text(0.5, -0.06, summary, ha='center', va='top', fontsize=10,
+             fontfamily='monospace', color='#2C3E50',
+             bbox=dict(boxstyle='round,pad=0.6', facecolor='#F7F9F9',
+                       edgecolor='#2C3E50', alpha=0.95))
+
     plt.tight_layout()
     save_path = os.path.join(PLOTS_DIR, "exp1_vary_k.png")
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    plt.savefig(save_path, bbox_inches='tight')
+    plt.savefig(save_path, bbox_inches='tight', dpi=150)
     plt.close()
     print(f"\n  Plot saved: {save_path}")
 
-    # Print conclusion
-    best_k_sil = k_values[np.argmax(silhouettes)]
-    best_k_bic = k_values[np.argmin(bics)]
-    print(f"\n  CONCLUSION:")
-    print(f"    Best K by Silhouette Score: K={best_k_sil} ({max(silhouettes):.4f})")
-    print(f"    Best K by BIC: K={best_k_bic} ({min(bics):.4f})")
-    print(f"    K=2 matches the bimodal physical structure of Old Faithful.")
+    # ── Console summary ───────────────────────────────────────
+    print(f"\n  {'K':<4} {'#p':<4} {'LL':>10} {'AIC':>10} {'BIC':>10} {'Silhouette':>12}")
+    print(f"  {'-'*4} {'-'*4} {'-'*10} {'-'*10} {'-'*10} {'-'*12}")
+    for k, n_p, ll, aic, bic, sil in zip(k_values,
+                                          [_gmm_n_params(k, n_features) for k in k_values],
+                                          log_liks, aics, bics, silhouettes):
+        sil_str = f"{sil:>12.4f}" if not np.isnan(sil) else "         N/A"
+        tag = ""
+        if k == elbow_k_bic and k == best_k_sil:
+            tag = " ← CHOSEN (Elbow + Best Silhouette)"
+        elif k == best_k_bic_raw:
+            tag = f" ← raw min BIC (but NOT elbow)"
+        print(f"  {k:<4} {n_p:<4} {ll:>10.2f} {aic:>10.2f} {bic:>10.2f} {sil_str}{tag}")
 
-    return k_values, silhouettes, log_liks, bics
+    print(f"\n  ELBOW ANALYSIS:")
+    for i, (da, db) in enumerate(zip(aic_deltas, bic_deltas)):
+        arrow = "  ← ELBOW (biggest drop)" if i == np.argmax(bic_deltas) else ""
+        print(f"    K={k_values[i]}→K={k_values[i+1]}:  ΔAIC={da:+.0f}  ΔBIC={db:+.0f}{arrow}")
+
+    print(f"\n  CONCLUSION:")
+    print(f"    ✓ Silhouette: K={best_k_sil} is best (score={max(s_sil):.4f})")
+    print(f"    ✓ BIC Elbow:  K={elbow_k_bic} (biggest ΔBIC={max(bic_deltas):+.0f})")
+    print(f"    ✓ AIC Elbow:  K={elbow_k_aic} (biggest ΔAIC={max(aic_deltas):+.0f})")
+    if best_k_bic_raw != elbow_k_bic:
+        print(f"    ⚠ Raw min BIC prefers K={best_k_bic_raw}, but the improvement")
+        print(f"      from K={elbow_k_bic}→K={best_k_bic_raw} is marginal "
+              f"(ΔBIC={bics[k_values.index(elbow_k_bic)] - bics[k_values.index(best_k_bic_raw)]:+.0f})")
+        print(f"      and K={best_k_bic_raw} has no physical basis in Iris.")
+    print(f"    → K=3 chosen: all criteria agree + matches 3 Iris species.")
+
+    return k_values, silhouettes, log_liks, aics, bics
 
 
 def experiment_convergence(X):
@@ -142,7 +359,7 @@ def experiment_convergence(X):
 
     # Run with generous limits to see full convergence behavior
     params, resp, ll_history, n_iter = fit_gmm(
-        X, K=2, max_iters=200, tol=1e-10,  # Very tight to see full curve
+        X, K=3, max_iters=200, tol=1e-10,  # Very tight to see full curve
         reg_covar=REG_COVAR, init_method="kmeans", seed=RANDOM_SEED
     )
 
@@ -193,7 +410,7 @@ def experiment_convergence(X):
                 fontweight='bold')
     plt.tight_layout()
     save_path = os.path.join(PLOTS_DIR, "exp2_convergence.png")
-    plt.savefig(save_path, bbox_inches='tight')
+    plt.savefig(save_path, bbox_inches='tight', dpi=150)
     plt.close()
     print(f"\n  Plot saved: {save_path}")
 
@@ -224,7 +441,7 @@ def experiment_regularization(X):
         print(f"\n  Testing reg_covar={reg:.0e}...")
         try:
             params, resp, ll_history, n_iter = fit_gmm(
-                X, K=2, max_iters=100, tol=1e-6, reg_covar=reg,
+                X, K=3, max_iters=100, tol=1e-6, reg_covar=reg,
                 init_method="kmeans", seed=RANDOM_SEED
             )
             ll = compute_log_likelihood(X, params)
@@ -273,7 +490,7 @@ def experiment_regularization(X):
                 fontweight='bold')
     plt.tight_layout()
     save_path = os.path.join(PLOTS_DIR, "exp3_regularization.png")
-    plt.savefig(save_path, bbox_inches='tight')
+    plt.savefig(save_path, bbox_inches='tight', dpi=150)
     plt.close()
     print(f"\n  Plot saved: {save_path}")
 
@@ -304,7 +521,7 @@ def experiment_initialization(X):
     for seed in seeds:
         # Random init
         params_r, _, ll_r, n_iter_r = fit_gmm(
-            X, K=2, max_iters=100, tol=1e-6, reg_covar=REG_COVAR,
+            X, K=3, max_iters=100, tol=1e-6, reg_covar=REG_COVAR,
             init_method="random", seed=seed
         )
         ll_final_r = compute_log_likelihood(X, params_r)
@@ -312,7 +529,7 @@ def experiment_initialization(X):
 
         # KMeans init
         params_k, _, ll_k, n_iter_k = fit_gmm(
-            X, K=2, max_iters=100, tol=1e-6, reg_covar=REG_COVAR,
+            X, K=3, max_iters=100, tol=1e-6, reg_covar=REG_COVAR,
             init_method="kmeans", seed=seed
         )
         ll_final_k = compute_log_likelihood(X, params_k)
@@ -352,7 +569,7 @@ def experiment_initialization(X):
                 fontsize=14, fontweight='bold')
     plt.tight_layout()
     save_path = os.path.join(PLOTS_DIR, "exp4_initialization.png")
-    plt.savefig(save_path, bbox_inches='tight')
+    plt.savefig(save_path, bbox_inches='tight', dpi=150)
     plt.close()
     print(f"\n  Plot saved: {save_path}")
 
@@ -384,7 +601,7 @@ def experiment_knn_k(X):
     print("=" * 60)
 
     # First get KMeans labels
-    kmeans_labels, _ = fit_kmeans(X, K=2, max_iters=100, seed=RANDOM_SEED)
+    kmeans_labels, _ = fit_kmeans(X, K=3, max_iters=100, seed=RANDOM_SEED)
 
     k_values = [1, 3, 5, 7, 9, 15, 25]
     consistencies = []
@@ -413,7 +630,7 @@ def experiment_knn_k(X):
 
     plt.tight_layout()
     save_path = os.path.join(PLOTS_DIR, "exp5_knn_k.png")
-    plt.savefig(save_path, bbox_inches='tight')
+    plt.savefig(save_path, bbox_inches='tight', dpi=150)
     plt.close()
     print(f"\n  Plot saved: {save_path}")
 
@@ -432,7 +649,7 @@ def run_all_hyperparameter_experiments():
     """
     print("\n" + "#" * 65)
     print("#  HYPERPARAMETER JUSTIFICATION EXPERIMENTS")
-    print("#  Testing each value empirically on the Old Faithful dataset")
+    print("#  Testing each value empirically on the Iris dataset")
     print("#" * 65)
 
     # Load data

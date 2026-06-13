@@ -1,7 +1,7 @@
 """
 run_gmm.py — Driver script for GMM training and evaluation.
 
-Loads preprocessed Old Faithful data, trains the GMM using EM,
+Loads preprocessed Iris data, trains the GMM using EM,
 prints learned parameters, and saves visualization plots.
 """
 import os

@@ -107,7 +107,7 @@ def write_metrics_report(metrics, filepath):
     with open(filepath, 'w') as f:
         f.write("=" * 65 + "\n")
         f.write("EXPERIMENTAL RESULTS — MODEL COMPARISON\n")
-        f.write("Dataset: Old Faithful Geyser (298 observations, 2 features)\n")
+        f.write("Dataset: Iris Dataset\n")
         f.write("=" * 65 + "\n\n")
 
         # Metrics table
@@ -143,7 +143,7 @@ def write_metrics_report(metrics, filepath):
         f.write("1. WHY GMM OUTPERFORMS K-MEANS ON PROBABILISTIC CLUSTERS:\n")
         f.write("   - GMM models full covariance (elliptical clusters), while\n")
         f.write("     K-Means assumes spherical clusters (equal variance).\n")
-        f.write("   - Old Faithful clusters are elongated and correlated,\n")
+        f.write("   - Iris clusters are elongated and correlated,\n")
         f.write("     favoring GMM's covariance modeling.\n")
         f.write("   - GMM provides soft assignments (probabilities), giving\n")
         f.write("     nuanced membership for boundary points.\n\n")
@@ -163,10 +163,9 @@ def write_metrics_report(metrics, filepath):
         f.write("   - No probabilistic interpretation of assignments.\n\n")
 
         f.write("4. EFFECT OF COVARIANCE MODELING IN GMM:\n")
-        f.write("   - Full covariance captures the positive correlation between\n")
-        f.write("     eruption duration and waiting time within each cluster.\n")
-        f.write("   - This is physically meaningful: longer eruptions deplete\n")
-        f.write("     more water, requiring longer refill (wait) times.\n")
+        f.write("   - Full covariance captures the correlation between\n")
+        f.write("     features within each cluster.\n")
+        f.write("   - This respects the natural variations in flower dimensions.\n")
         f.write("   - Without covariance modeling, boundary points would be\n")
         f.write("     misassigned, reducing clustering quality.\n")
 

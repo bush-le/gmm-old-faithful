@@ -180,11 +180,11 @@ def plot_gmm_ellipses(X, params, save_path):
         color = CLUSTER_COLORS[k % len(CLUSTER_COLORS)]
         
         # 1-sigma ellipse (~68% confidence)
-        ellipse_1 = _compute_ellipse_points(params.means[k], params.covariances[k], n_std=1.0)
+        ellipse_1 = _compute_ellipse_points(params.means[k][:2], params.covariances[k][:2, :2], n_std=1.0)
         ax.plot(ellipse_1[:, 0], ellipse_1[:, 1], color=color, linewidth=2, linestyle='-')
         
         # 2-sigma ellipse (~95% confidence)
-        ellipse_2 = _compute_ellipse_points(params.means[k], params.covariances[k], n_std=2.0)
+        ellipse_2 = _compute_ellipse_points(params.means[k][:2], params.covariances[k][:2, :2], n_std=2.0)
         ax.plot(ellipse_2[:, 0], ellipse_2[:, 1], color=color, linewidth=1.5, linestyle='--')
         
         # Mark center

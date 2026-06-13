@@ -18,25 +18,21 @@ def clean_data(raw_data):
     """
     Remove invalid rows (NaN, negative, or zero values).
     
-    Old Faithful data should have:
-    - eruptions > 0 (duration in minutes)
-    - waiting > 0 (wait time in minutes)
+    Iris data should have all positive features.
     
     Args:
-        raw_data (list): List of [eruptions, waiting] pairs.
+        raw_data (list): List of feature rows.
         
     Returns:
-        numpy.ndarray: Cleaned data array of shape (N, 2).
+        numpy.ndarray: Cleaned data array of shape (N, D).
     """
     cleaned = []
     removed_count = 0
     
     for row in raw_data:
-        eruptions, waiting = row[0], row[1]
-        
         # Check for valid numeric values
-        if eruptions > 0 and waiting > 0:
-            cleaned.append([eruptions, waiting])
+        if all(val > 0 for val in row):
+            cleaned.append(row)
         else:
             removed_count += 1
     
@@ -50,14 +46,6 @@ def clean_data(raw_data):
 def compute_mean(data):
     """
     Compute column-wise mean manually.
-    
-    Formula: mean = (1/N) * sum(x_i)
-    
-    Args:
-        data (numpy.ndarray): Data array of shape (N, D).
-        
-    Returns:
-        numpy.ndarray: Mean vector of shape (D,).
     """
     n_samples = data.shape[0]
     mean = np.zeros(data.shape[1])
@@ -69,15 +57,6 @@ def compute_mean(data):
 def compute_std(data, mean):
     """
     Compute column-wise standard deviation manually.
-    
-    Formula: std = sqrt((1/N) * sum((x_i - mean)^2))
-    
-    Args:
-        data (numpy.ndarray): Data array of shape (N, D).
-        mean (numpy.ndarray): Mean vector of shape (D,).
-        
-    Returns:
-        numpy.ndarray: Standard deviation vector of shape (D,).
     """
     n_samples = data.shape[0]
     variance = np.zeros(data.shape[1])
@@ -91,46 +70,28 @@ def compute_std(data, mean):
 def standardize(data):
     """
     Apply z-score standardization: x' = (x - mean) / std
-    
-    This transforms each feature to have mean=0 and std=1.
-    Essential for GMM because:
-    - Features on different scales would dominate the Euclidean distance
-    - Covariance matrix becomes ill-conditioned with mixed scales
-    - EM convergence is faster with normalized features
-    
-    Args:
-        data (numpy.ndarray): Raw data of shape (N, D).
-        
-    Returns:
-        tuple: (standardized_data, mean, std) for inverse transform.
     """
     mean = compute_mean(data)
     std = compute_std(data, mean)
     
-    print(f"  Feature means: eruptions={mean[0]:.4f}, waiting={mean[1]:.4f}")
-    print(f"  Feature stds:  eruptions={std[0]:.4f}, waiting={std[1]:.4f}")
+    print(f"  Feature means: " + ", ".join([f"f{i}={mean[i]:.4f}" for i in range(len(mean))]))
+    print(f"  Feature stds:  " + ", ".join([f"f{i}={std[i]:.4f}" for i in range(len(std))]))
     
     standardized = (data - mean) / std
     
     return standardized, mean, std
 
 
-def save_csv(data, filepath, header="eruptions,waiting"):
+def save_csv(data, filepath, header="sepal_length,sepal_width,petal_length,petal_width"):
     """
     Save numpy array to CSV file using manual file I/O.
-    
-    Args:
-        data (numpy.ndarray): Data array of shape (N, 2).
-        filepath (str): Output file path.
-        header (str): CSV header line.
     """
-    # Create directory if needed
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     
     with open(filepath, 'w') as f:
         f.write(header + '\n')
         for row in data:
-            f.write(f"{row[0]:.6f},{row[1]:.6f}\n")
+            f.write(",".join([f"{val:.6f}" for val in row]) + "\n")
     
     print(f"  Saved {len(data)} rows to {filepath}")
 
@@ -142,27 +103,20 @@ def run_pipeline():
     2. Clean invalid rows
     3. Standardize features (z-score)
     4. Save processed data
-    
-    Returns:
-        tuple: (standardized_data, mean, std)
     """
     print("\n" + "="*60)
     print("PREPROCESSING PIPELINE")
     print("="*60)
     
-    # Step 1: Load
     print("\n[Step 1] Loading raw data...")
     raw_data = load_csv(RAW_DATA_PATH)
     
-    # Step 2: Clean
     print("\n[Step 2] Cleaning data...")
     clean = clean_data(raw_data)
     
-    # Step 3: Standardize
     print("\n[Step 3] Standardizing features (z-score)...")
     standardized, mean, std = standardize(clean)
     
-    # Step 4: Save
     print("\n[Step 4] Saving processed data...")
     save_csv(standardized, PROCESSED_DATA_PATH)
     

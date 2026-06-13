@@ -2,7 +2,7 @@
 run_baselines.py — Driver script for baseline model experiments.
 
 Runs K-Means, Hierarchical Clustering, and KNN consistency check
-on the preprocessed Old Faithful dataset.
+on the preprocessed Iris dataset.
 """
 import os
 import sys
@@ -42,7 +42,7 @@ def run_kmeans_experiment(X):
 
     # Save plot
     plot_clusters(
-        X, labels, "K-Means Clustering (K=2)",
+        X, labels, "K-Means Clustering (K=3)",
         os.path.join(PLOTS_DIR, "kmeans_result.png"),
         centroids=centroids
     )
@@ -73,7 +73,7 @@ def run_hierarchical_experiment(X):
 
     # Save plot
     plot_clusters(
-        X, labels, "Agglomerative Hierarchical Clustering (K=2)",
+        X, labels, "Agglomerative Hierarchical Clustering (K=3)",
         os.path.join(PLOTS_DIR, "hierarchical_result.png")
     )
 

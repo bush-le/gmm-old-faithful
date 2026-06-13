@@ -1,16 +1,16 @@
 =================================================================
 EXPERIMENTAL RESULTS — MODEL COMPARISON
-Dataset: Old Faithful Geyser (298 observations, 2 features)
+Dataset: Iris Geyser (298 observations, 2 features)
 =================================================================
 
 Metric                             GMM      K-Means   Hierarchical
 -----------------------------------------------------------------
-Log-Likelihood               -442.0737          N/A            N/A
-Silhouette Score                0.7304       0.7380         0.7292
-Cluster Separation              2.7175       2.7100         2.7274
+Log-Likelihood               -308.4201          N/A            N/A
+Silhouette Score                0.3685       0.4621         0.4795
+Cluster Separation              2.7144       2.9472         3.7455
 -----------------------------------------------------------------
 
-KNN Consistency Score: 1.0000
+KNN Consistency Score: 0.9733
 
 =================================================================
 ANALYSIS
@@ -19,7 +19,7 @@ ANALYSIS
 1. WHY GMM OUTPERFORMS K-MEANS ON PROBABILISTIC CLUSTERS:
    - GMM models full covariance (elliptical clusters), while
      K-Means assumes spherical clusters (equal variance).
-   - Old Faithful clusters are elongated and correlated,
+   - Iris clusters are elongated and correlated,
      favoring GMM's covariance modeling.
    - GMM provides soft assignments (probabilities), giving
      nuanced membership for boundary points.
@@ -40,8 +40,8 @@ ANALYSIS
 
 4. EFFECT OF COVARIANCE MODELING IN GMM:
    - Full covariance captures the positive correlation between
-     eruption duration and waiting time within each cluster.
-   - This is physically meaningful: longer eruptions deplete
+     sepal length and sepal_width time within each cluster.
+   - This is physically meaningful: longer sepal_length deplete
      more water, requiring longer refill (wait) times.
    - Without covariance modeling, boundary points would be
      misassigned, reducing clustering quality.
