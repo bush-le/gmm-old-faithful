@@ -29,10 +29,10 @@ MAX_ITERS = 100
 # Well above float64 machine epsilon (~2.2e-16).
 TOL = 1e-6
 
-# REG_COVAR=1e-6: Added to diagonal of covariance matrices (epsilon*I) to prevent
-# singularity when a component collapses onto a point. 1e-6 is negligible
-# compared to data variance (~1.0 after standardization) but prevents det=0.
-REG_COVAR = 1e-6
+# REG_COVAR=1e-2: Added to diagonal of covariance matrices (epsilon*I) to prevent
+# singularity when a component collapses onto a point. Set to 1e-2 to prevent
+# overfitting/singularity on human rounding discretization artifacts (e.g. 53 points at 4.0min).
+REG_COVAR = 1e-2
 
 # INIT_METHOD="kmeans": KMeans provides good initial means close to cluster centers,
 # reducing EM iterations and avoiding poor local optima from random init.

@@ -1,0 +1,6 @@
+# Requirements for GMM Old Faithful Project
+# Python 3.10+ compatible
+
+numpy>=1.20.0
+matplotlib>=3.5.0
+olefile>=0.46
