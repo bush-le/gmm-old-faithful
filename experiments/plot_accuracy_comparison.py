@@ -58,8 +58,8 @@ def main():
     
     # Cấu hình hiển thị trục và tiêu đề
     ax.set_ylim(0, 100)
-    ax.set_ylabel('Độ chính xác / Accuracy (%)', fontsize=12, fontweight='bold')
-    ax.set_title('So sánh độ chính xác phân loại:\nK-Means vs Gaussian Mixture Model (GMM)', fontsize=14, fontweight='bold', pad=20)
+    ax.set_ylabel('Accuracy (%)', fontsize=12, fontweight='bold')
+    ax.set_title('Classification Accuracy Comparison:\nK-Means vs Gaussian Mixture Model (GMM)', fontsize=14, fontweight='bold', pad=20)
     
     # Đính kèm phần trăm ngay trên từng cột
     for bar in bars:
@@ -68,7 +68,7 @@ def main():
                 ha='center', va='bottom', fontsize=12, fontweight='bold')
         
     # Chú thích giải thích nguyên nhân
-    caption = "Dữ liệu được tạo mô phỏng phân bố Gaussian đa biến (hình elip) chồng lấp.\nGMM đạt độ chính xác cao hơn hẳn nhờ mô hình hóa được ma trận hiệp phương sai (covariance)\ntrong khi K-Means chỉ dùng khoảng cách cứng (Euclidean)."
+    caption = "Synthetic data generated from overlapping multivariate Gaussian distributions (ellipsoidal).\nGMM achieves significantly higher accuracy by modeling the covariance matrix,\nwhereas K-Means relies only on hard Euclidean distance."
     plt.figtext(0.5, -0.06, caption, ha="center", fontsize=10, style='italic',
                 bbox=dict(facecolor='#F8F9F9', edgecolor='#BDC3C7', boxstyle='round,pad=0.8'))
 
@@ -80,9 +80,9 @@ def main():
     plt.savefig(out_path, dpi=200, bbox_inches='tight')
     plt.close()
     
-    print(f"Đã lưu biểu đồ thành công tại: {out_path}")
-    print(f"Độ chính xác của K-Means: {km_accuracy:.2f}%")
-    print(f"Độ chính xác của GMM:     {gmm_accuracy:.2f}%")
+    print(f"Successfully saved chart to: {out_path}")
+    print(f"K-Means Accuracy: {km_accuracy:.2f}%")
+    print(f"GMM Accuracy:     {gmm_accuracy:.2f}%")
 
 if __name__ == "__main__":
     main()
