@@ -1,12 +1,15 @@
 """
-visualization.py — Plotting functions using Matplotlib only.
+visualization.py — Plotting functions for GMM pipeline using Matplotlib only.
 
 Generates publication-quality visualizations for:
 - Raw data scatter plots
-- Cluster assignment results  
 - GMM Gaussian ellipse overlays
-- Side-by-side model comparison
 - Convergence curves
+- BIC/AIC model selection plots
+
+All plots saved via plt.savefig() — no interactive plt.show().
+
+⚠️ Pure matplotlib only. No seaborn, no plotly.
 """
 import numpy as np
 import matplotlib
@@ -129,7 +132,6 @@ def _compute_ellipse_points(mean, cov, n_std=2.0, n_points=100):
     circle = np.column_stack([np.cos(theta), np.sin(theta)])
     
     # Scale by sqrt(eigenvalues) * n_std, rotate by eigenvectors
-    # Transform: ellipse = eigenvectors @ diag(sqrt(eigenvalues) * n_std) @ circle
     scale = np.diag(n_std * np.sqrt(eigenvalues))
     ellipse = np.dot(circle, np.dot(scale, eigenvectors.T))
     
@@ -213,16 +215,32 @@ def plot_convergence(log_likelihoods, save_path):
         save_path (str): Path to save the plot.
     """
     setup_plot_style()
-    fig, ax = plt.subplots()
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
     
     iterations = range(1, len(log_likelihoods) + 1)
-    ax.plot(iterations, log_likelihoods, 'o-', color='#2C3E50',
-           markersize=4, linewidth=1.5)
     
-    ax.set_xlabel('EM Iteration')
-    ax.set_ylabel('Log-Likelihood')
-    ax.set_title('EM Convergence: Log-Likelihood vs Iteration')
+    # Log-likelihood curve
+    axes[0].plot(iterations, log_likelihoods, 'o-', color='#2C3E50',
+               markersize=4, linewidth=1.5)
+    axes[0].set_xlabel('EM Iteration')
+    axes[0].set_ylabel('Log-Likelihood')
+    axes[0].set_title('EM Convergence: Log-Likelihood vs Iteration')
     
+    # Delta log-likelihood (convergence rate)
+    if len(log_likelihoods) > 1:
+        deltas = [abs(log_likelihoods[i] - log_likelihoods[i-1])
+                  for i in range(1, len(log_likelihoods))]
+        delta_iters = range(2, len(log_likelihoods) + 1)
+        axes[1].semilogy(delta_iters, deltas, 'o-', color='#8E44AD',
+                        markersize=4, linewidth=1.5)
+        axes[1].axhline(y=1e-6, color='#E74C3C', linestyle='--', alpha=0.7,
+                       label='TOL = 1e-6')
+        axes[1].set_xlabel('EM Iteration')
+        axes[1].set_ylabel('|Δ Log-Likelihood| (log scale)')
+        axes[1].set_title('Convergence Rate')
+        axes[1].legend()
+    
+    plt.suptitle('EM Algorithm Convergence', fontsize=13, fontweight='bold')
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     plt.tight_layout()
     plt.savefig(save_path, bbox_inches='tight')
@@ -230,37 +248,34 @@ def plot_convergence(log_likelihoods, save_path):
     print(f"  Saved: {save_path}")
 
 
-def plot_comparison(X, results_dict, save_path):
+def plot_bic_aic(k_values, bics, aics, save_path):
     """
-    Create side-by-side comparison of all clustering methods.
+    Plot BIC and AIC vs number of components for model selection.
     
     Args:
-        X (numpy.ndarray): Data of shape (N, 2).
-        results_dict (dict): Maps method name to labels array.
+        k_values (list): K values tested.
+        bics (list): BIC values for each K.
+        aics (list): AIC values for each K.
         save_path (str): Path to save the plot.
     """
     setup_plot_style()
-    n_methods = len(results_dict)
-    fig, axes = plt.subplots(1, n_methods, figsize=(6 * n_methods, 5))
+    fig, ax = plt.subplots(figsize=(8, 5))
     
-    if n_methods == 1:
-        axes = [axes]
+    ax.plot(k_values, bics, 'o-', color='#E74C3C', markersize=8,
+            linewidth=2, label='BIC (lower = better)')
+    ax.plot(k_values, aics, 's-', color='#3498DB', markersize=8,
+            linewidth=2, label='AIC (lower = better)')
     
-    for ax, (name, labels) in zip(axes, results_dict.items()):
-        unique_labels = np.unique(labels)
-        for k in unique_labels:
-            mask = labels == k
-            color = CLUSTER_COLORS[k % len(CLUSTER_COLORS)]
-            ax.scatter(X[mask, 0], X[mask, 1], c=color, alpha=0.6, s=15,
-                      edgecolors='white', linewidths=0.3,
-                      label=f'Cluster {k+1}')
-        
-        ax.set_xlabel('Eruption Duration (std)')
-        ax.set_ylabel('Waiting Time (std)')
-        ax.set_title(name)
-        ax.legend(loc='upper left', fontsize=9)
+    # Mark optimal K
+    best_k_bic = k_values[np.argmin(bics)]
+    ax.axvline(x=best_k_bic, color='#2ECC71', linestyle=':', alpha=0.7,
+               label=f'Best K (BIC) = {best_k_bic}')
     
-    plt.suptitle('Clustering Method Comparison', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Number of Components (K)')
+    ax.set_ylabel('Information Criterion')
+    ax.set_title('Model Selection: BIC and AIC vs K')
+    ax.set_xticks(k_values)
+    ax.legend()
     
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     plt.tight_layout()

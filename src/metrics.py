@@ -1,12 +1,16 @@
 """
-metrics.py — Evaluation metrics implemented from scratch.
+metrics.py — GMM-specific evaluation metrics implemented from scratch.
 
-All metrics are computed manually without scikit-learn or scipy.
+All metrics computed manually without scikit-learn or scipy.
 
 Metrics:
 1. Log-Likelihood: How well the GMM fits the data (higher = better)
-2. Silhouette Score: Cluster cohesion vs separation (-1 to 1, higher = better)
-3. Cluster Separation: Mean distance between cluster centroids (higher = more separated)
+2. BIC (Bayesian Information Criterion): Model selection with complexity penalty (lower = better)
+3. AIC (Akaike Information Criterion): Alternative model selection criterion (lower = better)
+4. Silhouette Score: Cluster cohesion vs separation (-1 to 1, higher = better)
+5. Cluster Separation: Mean distance between cluster centroids
+
+⚠️ Pure numpy only.
 """
 import numpy as np
 
@@ -24,6 +28,58 @@ def euclidean_distance(a, b):
     """
     diff = a - b
     return np.sqrt(np.sum(diff * diff))
+
+
+def compute_bic(log_likelihood, K, n_samples, n_features):
+    """
+    Compute Bayesian Information Criterion for GMM.
+    
+    BIC = -2 * log_likelihood + n_params * log(N)
+    
+    Lower BIC = better model (balances fit vs complexity).
+    
+    GMM parameters:
+    - K * D means
+    - K * D*(D+1)/2 covariance entries (symmetric matrix)
+    - K - 1 mixing weights (sum-to-1 constraint)
+    
+    Args:
+        log_likelihood (float): Total log-likelihood.
+        K (int): Number of components.
+        n_samples (int): Number of data points.
+        n_features (int): Number of features.
+    
+    Returns:
+        float: BIC value.
+    """
+    n_params = (K * n_features +                        # means
+                K * n_features * (n_features + 1) / 2 + # covariances
+                (K - 1))                                 # weights
+    bic = -2 * log_likelihood + n_params * np.log(n_samples)
+    return bic
+
+
+def compute_aic(log_likelihood, K, n_features):
+    """
+    Compute Akaike Information Criterion for GMM.
+    
+    AIC = -2 * log_likelihood + 2 * n_params
+    
+    Lower AIC = better model. Less penalty than BIC for small datasets.
+    
+    Args:
+        log_likelihood (float): Total log-likelihood.
+        K (int): Number of components.
+        n_features (int): Number of features.
+    
+    Returns:
+        float: AIC value.
+    """
+    n_params = (K * n_features +
+                K * n_features * (n_features + 1) / 2 +
+                (K - 1))
+    aic = -2 * log_likelihood + 2 * n_params
+    return aic
 
 
 def compute_silhouette_sample(X, labels, point_idx):
@@ -151,3 +207,90 @@ def cluster_separation(X, labels):
         return 0.0
     
     return total_dist / n_pairs
+
+
+def compute_all_gmm_metrics(X, params, labels, log_likelihood):
+    """
+    Compute all GMM-specific evaluation metrics.
+    
+    Args:
+        X (numpy.ndarray): Data of shape (N, D).
+        params: GMMParams object.
+        labels (numpy.ndarray): Hard cluster assignments.
+        log_likelihood (float): Final log-likelihood.
+    
+    Returns:
+        dict: All computed metrics.
+    """
+    n_samples, n_features = X.shape
+    K = params.K
+    
+    bic = compute_bic(log_likelihood, K, n_samples, n_features)
+    aic = compute_aic(log_likelihood, K, n_features)
+    sil = silhouette_score(X, labels)
+    sep = cluster_separation(X, labels)
+    
+    metrics = {
+        'log_likelihood': log_likelihood,
+        'bic': bic,
+        'aic': aic,
+        'silhouette': sil,
+        'separation': sep,
+        'K': K,
+        'n_samples': n_samples,
+        'n_features': n_features,
+    }
+    
+    return metrics
+
+
+def write_metrics_report(metrics, params, filepath):
+    """
+    Write GMM metrics to a structured text report.
+    
+    Args:
+        metrics (dict): Computed metrics.
+        params: GMMParams object.
+        filepath (str): Output file path.
+    """
+    import os
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
+    with open(filepath, 'w') as f:
+        f.write("=" * 60 + "\n")
+        f.write("GMM EVALUATION METRICS — OLD FAITHFUL GEYSER\n")
+        f.write(f"Dataset: {metrics['n_samples']} samples, {metrics['n_features']} features\n")
+        f.write(f"Number of components: K={metrics['K']}\n")
+        f.write("=" * 60 + "\n\n")
+        
+        f.write(f"{'Metric':<25} {'Value':>15}\n")
+        f.write("-" * 42 + "\n")
+        f.write(f"{'Log-Likelihood':<25} {metrics['log_likelihood']:>15.4f}\n")
+        f.write(f"{'BIC':<25} {metrics['bic']:>15.4f}\n")
+        f.write(f"{'AIC':<25} {metrics['aic']:>15.4f}\n")
+        f.write(f"{'Silhouette Score':<25} {metrics['silhouette']:>15.4f}\n")
+        f.write(f"{'Cluster Separation':<25} {metrics['separation']:>15.4f}\n")
+        f.write("-" * 42 + "\n\n")
+        
+        # Learned parameters
+        f.write("LEARNED GMM PARAMETERS\n")
+        f.write("=" * 60 + "\n")
+        f.write(str(params) + "\n\n")
+        
+        # Cluster sizes
+        f.write("CLUSTER SIZES\n")
+        f.write("-" * 30 + "\n")
+        for k in range(params.K):
+            f.write(f"  Component {k+1}: weight π={params.weights[k]:.4f}\n")
+        f.write("\n")
+        
+        # Interpretation
+        f.write("METRIC INTERPRETATION\n")
+        f.write("=" * 60 + "\n")
+        f.write("Log-Likelihood: Higher = better fit. GMM maximizes this via EM.\n")
+        f.write("BIC: Lower = better. Penalizes model complexity (n_params * log N).\n")
+        f.write("AIC: Lower = better. Less penalty than BIC for small datasets.\n")
+        f.write("Silhouette: Range [-1, 1]. Near 1 = well-separated clusters.\n")
+        f.write("Cluster Separation: Higher = more distinct cluster centers.\n")
+    
+    print(f"  Metrics report saved: {filepath}")

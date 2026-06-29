@@ -1,0 +1,6 @@
+DATA LOADING
+==================================================
+Source: /home/bush/Desktop/gmm-old-faithful/data/raw/faithful.csv
+Rows loaded: 298
+Features: ['eruptions', 'waiting']
+Data type: numeric (float)

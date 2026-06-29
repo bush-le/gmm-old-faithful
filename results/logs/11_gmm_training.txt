@@ -1,0 +1,54 @@
+GMM TRAINING LOG
+==================================================
+K=2, init=kmeans, seed=42
+max_iters=100, tol=1e-06, reg_covar=0.01
+Converged in 29 iterations
+Final log-likelihood: -444.050377
+
+Log-likelihood per iteration:
+  Iter   1: -444.884000
+  Iter   2: -444.603397
+  Iter   3: -444.398063
+  Iter   4: -444.265118
+  Iter   5: -444.182375
+  Iter   6: -444.131597
+  Iter   7: -444.100485
+  Iter   8: -444.081369
+  Iter   9: -444.069583
+  Iter  10: -444.062295
+  Iter  11: -444.057779
+  Iter  12: -444.054976
+  Iter  13: -444.053236
+  Iter  14: -444.052154
+  Iter  15: -444.051482
+  Iter  16: -444.051064
+  Iter  17: -444.050803
+  Iter  18: -444.050642
+  Iter  19: -444.050541
+  Iter  20: -444.050478
+  Iter  21: -444.050440
+  Iter  22: -444.050415
+  Iter  23: -444.050400
+  Iter  24: -444.050391
+  Iter  25: -444.050385
+  Iter  26: -444.050381
+  Iter  27: -444.050379
+  Iter  28: -444.050378
+  Iter  29: -444.050377
+
+Learned Parameters:
+GMM with K=2 components:
+
+  Component 1:
+    Weight (pi):  0.3446
+    Mean (mu):    [-1.30503256 -1.21223456]
+    Covariance:
+      [0.06012706 0.03422655]
+      [0.03422655 0.20699495]
+
+  Component 2:
+    Weight (pi):  0.6554
+    Mean (mu):    [0.6861329  0.63734349]
+    Covariance:
+      [0.14320032 0.0668423 ]
+      [0.0668423  0.25337077]

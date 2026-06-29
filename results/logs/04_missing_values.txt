@@ -1,0 +1,7 @@
+MISSING VALUE ANALYSIS
+==================================================
+  eruptions: 0 missing values
+  waiting: 0 missing values
+
+No missing values found. No imputation needed.
+Decision: SKIP imputation (ref ML_PIPELINE_REFERENCE.md §4)

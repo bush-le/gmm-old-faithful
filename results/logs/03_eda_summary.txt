@@ -1,0 +1,52 @@
+EXPLORATORY DATA ANALYSIS — OLD FAITHFUL GEYSER
+Dataset: 298 samples, 2 features
+Features: ['eruptions', 'waiting']
+
+============================================================
+LENS 1 — GLOBAL OVERVIEW
+============================================================
+Number of samples:  298
+Number of features: 2
+Feature names:      ['eruptions', 'waiting']
+Data types:         All numeric (float64)
+
+  eruptions: 0 missing values
+  waiting: 0 missing values
+  Total missing: 0
+
+Feature                Min        Max       Mean     Median        Std
+-----------------------------------------------------------------
+eruptions           0.8300     5.4500     3.4615     4.0000     1.1460
+waiting            43.0000   108.0000    72.2886    76.0000    13.8832
+
+============================================================
+LENS 2 — UNIVARIATE DISTRIBUTIONS
+============================================================
+
+  eruptions:
+    Mean:     3.4615
+    Median:   4.0000
+    Std:      1.1460
+    Skewness: -0.4523
+    Kurtosis: -1.4197
+    Assessment: Approximately symmetric → mean is representative
+
+  waiting:
+    Mean:     72.2886
+    Median:   76.0000
+    Std:      13.8832
+    Skewness: -0.3342
+    Kurtosis: -1.0138
+    Assessment: Approximately symmetric → mean is representative
+
+============================================================
+LENS 3 — MULTIVARIATE RELATIONSHIPS
+============================================================
+
+  Correlation Matrix:
+                     eruptions        waiting
+      eruptions         1.0000         0.8874
+        waiting         0.8874         1.0000
+
+  r(eruptions, waiting) = 0.8874
+  Interpretation: Strong correlation — features are highly co-linear

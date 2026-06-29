@@ -1,0 +1,5 @@
+CATEGORICAL ENCODING — SKIPPED
+========================================
+Reason: Both features are numeric (float64).
+No categorical variables in Old Faithful dataset.
+Ref: ML_PIPELINE_REFERENCE.md §7
