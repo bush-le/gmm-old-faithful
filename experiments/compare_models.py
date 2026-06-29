@@ -30,7 +30,7 @@ def compute_all_metrics(X, gmm_labels, gmm_params,
     - KNN Consistency (KMeans pseudo-labels)
 
     Args:
-        X: Data of shape (N, 2).
+        X: Data of shape (N, D).
         gmm_labels: GMM cluster labels.
         gmm_params: GMM parameters (for log-likelihood).
         kmeans_labels: K-Means labels.

@@ -1,6 +1,6 @@
 =================================================================
 EXPERIMENTAL RESULTS — MODEL COMPARISON
-Dataset: Iris Geyser (298 observations, 2 features)
+Dataset: Iris Dataset
 =================================================================
 
 Metric                             GMM      K-Means   Hierarchical
@@ -39,9 +39,8 @@ ANALYSIS
    - No probabilistic interpretation of assignments.
 
 4. EFFECT OF COVARIANCE MODELING IN GMM:
-   - Full covariance captures the positive correlation between
-     sepal length and sepal_width time within each cluster.
-   - This is physically meaningful: longer sepal_length deplete
-     more water, requiring longer refill (wait) times.
+   - Full covariance captures the correlation between
+     features within each cluster.
+   - This respects the natural variations in flower dimensions.
    - Without covariance modeling, boundary points would be
      misassigned, reducing clustering quality.

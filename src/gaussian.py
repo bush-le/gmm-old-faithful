@@ -17,9 +17,9 @@ def compute_covariance_matrix(X):
     
     Formula: Sigma = (1/N) * sum_i (x_i - mean)(x_i - mean)^T
     
-    This measures how features co-vary. For 2D Old Faithful data:
-    - Diagonal entries = variance of each feature
-    - Off-diagonal = how eruption duration and waiting time correlate
+    This measures how features co-vary. For the Iris data:
+    - Diagonal = individual variances (spread)
+    - Off-diagonal = how features like sepal length and width correlate
     
     Args:
         X (numpy.ndarray): Data matrix of shape (N, D).

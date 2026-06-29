@@ -1,5 +1,5 @@
 """
-run_experiments.py — Master orchestrator for the entire GMM experiment pipeline.
+run_experiments.py — Master orchestrator for the entire GMM Iris experiment pipeline.
 
 Runs everything end-to-end:
 1. Data preprocessing (load, clean, standardize, save CSV)
@@ -25,7 +25,7 @@ def main():
     """Run the complete experimental pipeline."""
 
     print("╔" + "═" * 63 + "╗")
-    print("║  GMM FROM SCRATCH — OLD FAITHFUL GEYSER EXPERIMENT PIPELINE  ║")
+    print("║  GMM FROM SCRATCH — IRIS EXPERIMENT PIPELINE                 ║")
     print("╚" + "═" * 63 + "╝")
 
     # ─── Step 1: Preprocessing ───

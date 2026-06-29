@@ -47,9 +47,9 @@ def plot_raw_data(X, save_path):
     ax.scatter(X[:, 0], X[:, 1], c='#34495E', alpha=0.6, s=20,
               edgecolors='white', linewidths=0.5)
     
-    ax.set_xlabel('Eruption Duration (standardized)')
-    ax.set_ylabel('Waiting Time (standardized)')
-    ax.set_title('Old Faithful Geyser Dataset')
+    ax.set_xlabel('Sepal Length (standardized)')
+    ax.set_ylabel('Sepal Width (standardized)')
+    ax.set_title('Iris Dataset')
     
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     plt.tight_layout()
@@ -85,8 +85,8 @@ def plot_clusters(X, labels, title, save_path, centroids=None):
                   s=200, edgecolors='white', linewidths=2, zorder=5,
                   label='Centroids')
     
-    ax.set_xlabel('Eruption Duration (standardized)')
-    ax.set_ylabel('Waiting Time (standardized)')
+    ax.set_xlabel('Sepal Length (standardized)')
+    ax.set_ylabel('Sepal Width (standardized)')
     ax.set_title(title)
     ax.legend(loc='upper left', framealpha=0.9)
     
@@ -191,8 +191,8 @@ def plot_gmm_ellipses(X, params, save_path):
         ax.scatter(params.means[k][0], params.means[k][1], c=color, marker='+',
                   s=200, linewidths=3, zorder=5)
     
-    ax.set_xlabel('Eruption Duration (standardized)')
-    ax.set_ylabel('Waiting Time (standardized)')
+    ax.set_xlabel('Sepal Length (standardized)')
+    ax.set_ylabel('Sepal Width (standardized)')
     ax.set_title('GMM Clustering with Gaussian Confidence Ellipses\n'
                  '(solid = 1σ ≈ 68%, dashed = 2σ ≈ 95%)')
     ax.legend(loc='upper left', framealpha=0.9)
@@ -255,8 +255,8 @@ def plot_comparison(X, results_dict, save_path):
                       edgecolors='white', linewidths=0.3,
                       label=f'Cluster {k+1}')
         
-        ax.set_xlabel('Eruption Duration (std)')
-        ax.set_ylabel('Waiting Time (std)')
+        ax.set_xlabel('Sepal Length (std)')
+        ax.set_ylabel('Sepal Width (std)')
         ax.set_title(name)
         ax.legend(loc='upper left', fontsize=9)
     

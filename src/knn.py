@@ -1,8 +1,8 @@
 """
 knn.py — K-Nearest Neighbors classifier from scratch.
 
-Since Old Faithful has no ground-truth labels, we use KNN to test
-clustering consistency:
+Since we are treating the Iris dataset as unsupervised (ignoring ground-truth labels),
+we use KNN to test clustering stability/consistency.:
 1. Generate pseudo-labels from KMeans
 2. For each point, predict its label using KNN (leave-one-out)
 3. Measure agreement between KNN predictions and KMeans labels
