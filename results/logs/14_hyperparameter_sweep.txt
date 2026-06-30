@@ -1,0 +1,25 @@
+HYPERPARAMETER SWEEP SUMMARY
+==================================================
+
+Experiment 1: K (components)
+      K           LL          BIC          AIC
+  -----------------------------------------
+      1    -488.8970    1005.1554     987.7940
+      2    -342.1154     744.4258     706.2309
+      3    -317.4183     727.8653     668.8367
+      4    -312.0246     749.9114     670.0492
+      5    -311.8852     782.4662     681.7703
+  Best K (BIC): 3
+
+Experiment 2: reg_covar
+  reg_covar=1e-06: LL=-340.6588
+  reg_covar=1e-04: LL=-340.6590
+  reg_covar=1e-03: LL=-340.6793
+  reg_covar=1e-02: LL=-342.1154
+  reg_covar=1e-01: LL=-384.2333
+  Best reg_covar: 1e-06
+
+Experiment 3: init_method
+  init=kmeans: LL=-342.1154
+  init=random: LL=-342.1154
+  Best init: random

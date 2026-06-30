@@ -1,0 +1,25 @@
+OUTLIER DETECTION AND TREATMENT
+==================================================
+Method: IQR Rule (multiplier = 1.5)
+Bounds computed from: TRAINING DATA ONLY (§10)
+Reference: ML_PIPELINE_REFERENCE.md §5
+
+  eruptions:
+    Q1 = 2.0000, Q3 = 4.3950, IQR = 2.3950
+    Bounds: [-1.5925, 7.9875]
+    Train outliers: 0
+    Test outliers:  0
+
+  waiting:
+    Q1 = 58.0000, Q3 = 83.0000, IQR = 25.0000
+    Bounds: [20.5000, 120.5000]
+    Train outliers: 0
+    Test outliers:  0
+
+TREATMENT DECISION: KEEP all data points
+Justification:
+  - Old Faithful data are genuine physical measurements
+  - Bimodal structure means inter-cluster points are NOT errors
+  - GMM with full covariance handles non-spherical clusters
+  - Removing points would reduce already small dataset
+  - Ref: ML_PIPELINE_REFERENCE.md §5 — 'Never blindly remove outliers'

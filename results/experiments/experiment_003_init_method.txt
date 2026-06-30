@@ -1,0 +1,8 @@
+EXPERIMENT 003 — INIT_METHOD (INITIALIZATION)
+==================================================
+Fixed: K=2, tol=1e-06, reg_covar=0.01
+
+  init=kmeans: LL=-342.1154, iters=13
+  init=random: LL=-342.1154, iters=18
+
+  Best init by LL: random

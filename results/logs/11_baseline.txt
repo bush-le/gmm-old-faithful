@@ -1,0 +1,61 @@
+BASELINE MODEL COMPARISON
+======================================================================
+Reference: ML_PIPELINE_REFERENCE.md §11
+Train samples: 238, Test samples: 60
+Features: 2
+
+BASELINE 1: Single Gaussian (K=1)
+----------------------------------------------------------------------
+  Description:  Fit one multivariate Gaussian to all data (MLE)
+  Assumption:   Data is unimodal → expected to underfit Old Faithful
+  Mean:         [-3.71318289e-16 -4.42223289e-16]
+  Covariance:
+    [1.000001   0.89004349]
+    [0.89004349 1.000001  ]
+  Train log-likelihood: -488.4574
+  Test  log-likelihood: -120.5810
+
+BASELINE 2: K-Means (K=2)
+----------------------------------------------------------------------
+  Description:  Hard-assignment clustering with Euclidean distance
+  Assumption:   Spherical clusters with equal variance
+  Centroids:
+    Cluster 0: [0.69601787 0.65150962]
+    Cluster 1: [-1.29979241 -1.2166746 ]
+  Train silhouette score:  0.7502
+  Test  silhouette score:  0.6956
+  Train cluster separation: 2.7337
+  Test  cluster separation: 2.4931
+  Train cluster sizes: C0=155, C1=83
+  Test cluster sizes: C0=38, C1=22
+
+COMPARISON TABLE
+======================================================================
+Metric                            Single Gaussian            K-Means
+----------------------------------------------------------------------
+Train Log-Likelihood                    -488.4574                N/A
+Test Log-Likelihood                     -120.5810                N/A
+Train Silhouette                              N/A             0.7502
+Test Silhouette                               N/A             0.6956
+Train Cluster Separation                      N/A             2.7337
+Test Cluster Separation                       N/A             2.4931
+----------------------------------------------------------------------
+
+INTERPRETATION
+======================================================================
+Single Gaussian (K=1):
+  - Expected to underfit: Old Faithful is bimodal, not unimodal.
+  - The single Gaussian sits between the two clusters, assigning
+    low probability to points in both modes.
+  - Low log-likelihood confirms the need for K≥2 components.
+
+K-Means:
+  - Hard assignment: each point belongs to exactly one cluster.
+  - Assumes spherical clusters with equal variance.
+  - For Old Faithful's elliptical clusters, K-Means may misassign
+    boundary points that a GMM would handle probabilistically.
+
+GMM Advantage (to be compared after GMM fitting):
+  - Soft assignment captures uncertainty for boundary points.
+  - Full covariance models elliptical cluster shapes.
+  - Higher log-likelihood expected due to better density estimation.

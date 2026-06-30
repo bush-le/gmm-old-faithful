@@ -1,0 +1,11 @@
+==================================================
+CROSS-VALIDATION RESULTS — μ ± σ
+K=2, n_folds=5
+==================================================
+
+avg_log_likelihood:  -1.493264 ± 0.178219
+silhouette_score:    0.747518 ± 0.015008
+
+ll_stability:   Unstable — high variance, investigate further
+sil_stability:  Stable — consistent generalization across folds
+==================================================

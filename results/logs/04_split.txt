@@ -1,0 +1,25 @@
+============================================================
+STEP 04 — Train / Test Split Report
+============================================================
+
+Total samples : 298
+Train samples : 238  (79.9%)
+Test  samples : 60  (20.1%)
+
+------------------------------------------------------------
+Feature distribution comparison (train vs test):
+------------------------------------------------------------
+Feature              Set          Mean        Std
+-------------------------------------------------
+eruptions            train      3.4729     1.1523
+                     test       3.4167     1.1391
+waiting              train     72.3193    14.1558
+                     test      72.1667    12.9826
+
+------------------------------------------------------------
+⚠️  LEAKAGE BOUNDARY WARNING
+------------------------------------------------------------
+All feature engineering, scaling, and model fitting must be
+computed on the TRAINING set only, then applied to the test
+set.  Violating this boundary inflates performance estimates
+and invalidates evaluation metrics.

@@ -1,0 +1,50 @@
+MODEL INTERPRETABILITY
+==================================================
+Reference: ML_PIPELINE_REFERENCE.md §20
+
+GLOBAL INTERPRETABILITY
+----------------------------------------
+The GMM with K=2 identifies two distinct eruption regimes:
+
+  Component 1 (weight π=0.660):
+    Physical mean: eruptions=4.26 min, waiting=81.3 min
+    Standardized mean: [0.68167196 0.63868815]
+    Covariance (standardized):
+      [0.13840753 0.06077039]
+      [0.06077039 0.23654607]
+
+  Component 2 (weight π=0.340):
+    Physical mean: eruptions=1.95 min, waiting=54.8 min
+    Standardized mean: [-1.32060828 -1.23733542]
+    Covariance (standardized):
+      [0.05431489 0.01910832]
+      [0.01910832 0.18714777]
+
+Physical interpretation:
+  Component 2: SHORT eruptions (~2.0 min) with SHORT waits (~55 min)
+  Component 1: LONG eruptions (~4.3 min) with LONG waits (~81 min)
+
+This matches the well-documented bimodal behavior of Old Faithful:
+short eruptions deplete less water from the underground chamber,
+requiring less time to refill → shorter wait. Long eruptions deplete
+more water → longer refill → longer wait.
+
+The positive off-diagonal covariance entries confirm that eruption
+duration and waiting time are positively correlated WITHIN each
+cluster, not just between clusters.
+
+LOCAL INTERPRETABILITY
+----------------------------------------
+For any specific data point, the responsibilities γ(n,k) from the
+E-step give the probability of belonging to each component.
+Points near cluster centers have γ≈1 for one component and γ≈0
+for the other. Points in the transition zone have more balanced γ,
+indicating genuine ambiguity — which is captured by GMM's soft
+assignment but lost in K-Means' hard assignment.
+
+FEATURE IMPORTANCE:
+Both features (eruptions, waiting) contribute meaningfully to
+cluster separation. The strong positive correlation (r≈0.9)
+means either feature alone provides significant discriminative
+power, but using both together with full covariance captures
+the elongated cluster shapes that a diagonal covariance would miss.

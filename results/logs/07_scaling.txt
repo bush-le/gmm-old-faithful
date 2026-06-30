@@ -1,0 +1,26 @@
+FEATURE SCALING
+==================================================
+Method: Z-score Standardization (x' = (x - μ) / σ)
+Reference: ML_PIPELINE_REFERENCE.md §6
+⚠️  Parameters fitted on TRAINING DATA ONLY (§10)
+
+Justification:
+  - GMM requires standardization (§6.3, §6.4)
+  - Prevents covariance estimation distortion
+  - No fixed bounds → MinMax not appropriate
+
+Parameters (from training data):
+  eruptions: mean=3.472857, std=1.149833
+  waiting: mean=72.319328, std=14.126043
+
+Post-scaling verification (TRAIN):
+  eruptions: mean=-0.000000, std=1.000000
+  waiting: mean=-0.000000, std=1.000000
+
+Post-scaling verification (TEST — using TRAIN parameters):
+  eruptions: mean=-0.048868, std=0.982350
+  waiting: mean=-0.010807, std=0.911364
+
+NOTE: Test set mean/std will NOT be exactly 0/1 because
+scaling parameters come from train set. This is CORRECT —
+it means no leakage occurred.

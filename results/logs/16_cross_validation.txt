@@ -1,0 +1,39 @@
+=================================================================
+STEP 16 — K-FOLD CROSS-VALIDATION RESULTS (§17)
+Timestamp: 2026-06-30 19:50:35
+GMM Components: K=2   |   Folds: 5
+=================================================================
+
+PER-FOLD RESULTS
+--------------------------------------------------
+Fold        Avg Log-Lik     Silhouette
+--------------------------------------------------
+  1           -1.787338       0.727386
+  2           -1.603943       0.754366
+  3           -1.390068       0.745263
+  4           -1.297972       0.771843
+  5           -1.386997       0.738730
+--------------------------------------------------
+
+SUMMARY (μ ± σ)
+--------------------------------------------------
+  Avg Log-Likelihood:  -1.493264 ± 0.178219
+  Silhouette Score:    0.747518 ± 0.015008
+--------------------------------------------------
+
+STABILITY INTERPRETATION (§17.4)
+--------------------------------------------------
+  Log-Likelihood σ = 0.178219 → Unstable — high variance, investigate further
+  Silhouette σ     = 0.015008 → Stable — consistent generalization across folds
+--------------------------------------------------
+
+INTERPRETATION GUIDE (§17.4)
+--------------------------------------------------
+  σ < 0.02          → Stable: consistent generalization
+  0.02 ≤ σ < 0.05   → Moderate: acceptable variability
+  σ ≥ 0.05          → Unstable: high fold-to-fold variance
+--------------------------------------------------
+
+NOTE: Cross-validation operates ONLY within the training
+set (§17.2). The held-out test set is never touched.
+=================================================================

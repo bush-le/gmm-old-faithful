@@ -1,0 +1,5 @@
+CLASS IMBALANCE — SKIPPED
+========================================
+Reason: GMM is unsupervised — no class labels exist.
+Class imbalance is a supervised learning concept.
+Ref: ML_PIPELINE_REFERENCE.md §8

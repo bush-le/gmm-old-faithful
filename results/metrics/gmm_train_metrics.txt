@@ -1,0 +1,45 @@
+============================================================
+GMM EVALUATION METRICS — OLD FAITHFUL GEYSER
+Dataset: 238 samples, 2 features
+Number of components: K=2
+============================================================
+
+Metric                              Value
+------------------------------------------
+Log-Likelihood                  -342.1154
+BIC                              744.4258
+AIC                              706.2309
+Silhouette Score                   0.7488
+Cluster Separation                 2.7448
+------------------------------------------
+
+LEARNED GMM PARAMETERS
+============================================================
+GMM with K=2 components:
+
+  Component 1:
+    Weight (pi):  0.6596
+    Mean (mu):    [0.68167196 0.63868815]
+    Covariance:
+      [0.13840753 0.06077039]
+      [0.06077039 0.23654607]
+
+  Component 2:
+    Weight (pi):  0.3404
+    Mean (mu):    [-1.32060828 -1.23733542]
+    Covariance:
+      [0.05431489 0.01910832]
+      [0.01910832 0.18714777]
+
+CLUSTER SIZES
+------------------------------
+  Component 1: weight π=0.6596
+  Component 2: weight π=0.3404
+
+METRIC INTERPRETATION
+============================================================
+Log-Likelihood: Higher = better fit. GMM maximizes this via EM.
+BIC: Lower = better. Penalizes model complexity (n_params * log N).
+AIC: Lower = better. Less penalty than BIC for small datasets.
+Silhouette: Range [-1, 1]. Near 1 = well-separated clusters.
+Cluster Separation: Higher = more distinct cluster centers.

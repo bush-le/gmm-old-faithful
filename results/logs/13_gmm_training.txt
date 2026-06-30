@@ -1,0 +1,40 @@
+GMM TRAINING LOG
+==================================================
+Data: TRAIN SET ONLY (238 samples)
+K=2, init=kmeans, seed=42
+max_iters=100, tol=1e-06, reg_covar=0.01
+Converged in 13 iterations
+Train log-likelihood: -342.115433
+Avg train LL: -1.437460
+
+Log-likelihood per iteration:
+  Iter   1: -343.241929
+  Iter   2: -342.511063
+  Iter   3: -342.223524
+  Iter   4: -342.143928
+  Iter   5: -342.123020
+  Iter   6: -342.117465
+  Iter   7: -342.115978
+  Iter   8: -342.115580
+  Iter   9: -342.115472
+  Iter  10: -342.115444
+  Iter  11: -342.115436
+  Iter  12: -342.115434
+  Iter  13: -342.115433
+
+Learned Parameters:
+GMM with K=2 components:
+
+  Component 1:
+    Weight (pi):  0.6596
+    Mean (mu):    [0.68167196 0.63868815]
+    Covariance:
+      [0.13840753 0.06077039]
+      [0.06077039 0.23654607]
+
+  Component 2:
+    Weight (pi):  0.3404
+    Mean (mu):    [-1.32060828 -1.23733542]
+    Covariance:
+      [0.05431489 0.01910832]
+      [0.01910832 0.18714777]

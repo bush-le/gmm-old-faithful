@@ -1,0 +1,12 @@
+EXPERIMENT 002 — REG_COVAR (COVARIANCE REGULARIZATION)
+==================================================
+Single-variable principle (§18.3): ONLY reg_covar changes
+Fixed: K=2, init=kmeans, tol=1e-06
+
+  reg_covar=1e-06: LL=-340.6588, iters=11
+  reg_covar=1e-04: LL=-340.6590, iters=14
+  reg_covar=1e-03: LL=-340.6793, iters=15
+  reg_covar=1e-02: LL=-342.1154, iters=13
+  reg_covar=1e-01: LL=-384.2333, iters=14
+
+  Best reg_covar by LL: 1e-06

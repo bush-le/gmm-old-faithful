@@ -1,0 +1,13 @@
+EXPERIMENT 001 — K (NUMBER OF COMPONENTS)
+==================================================
+Single-variable principle (§18.3): ONLY K changes
+Fixed: init=kmeans, tol=1e-06, reg_covar=0.01
+Data: TRAIN set (238 samples)
+
+  K=1: LL=-488.8970, BIC=1005.1554, AIC=987.7940, iters=2
+  K=2: LL=-342.1154, BIC=744.4258, AIC=706.2309, iters=13
+  K=3: LL=-317.4183, BIC=727.8653, AIC=668.8367, iters=100
+  K=4: LL=-312.0246, BIC=749.9114, AIC=670.0492, iters=100
+  K=5: LL=-311.8852, BIC=782.4662, AIC=681.7703, iters=100
+
+  Best K by BIC: K=3

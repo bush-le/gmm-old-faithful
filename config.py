@@ -19,6 +19,7 @@ PLOTS_DIR = os.path.join(RESULTS_DIR, "plots")
 LOGS_DIR = os.path.join(RESULTS_DIR, "logs")
 METRICS_DIR = os.path.join(RESULTS_DIR, "metrics")
 MODELS_DIR = os.path.join(RESULTS_DIR, "models")
+EXPERIMENTS_DIR = os.path.join(RESULTS_DIR, "experiments")
 
 # ─── Clustering ───
 # K=2: Old Faithful has two eruption regimes (short ~2min + short wait ~55min,
@@ -57,3 +58,16 @@ IQR_MULTIPLIER = 1.5
 # ─── Reproducibility ───
 # Fixed seed ensures deterministic results across runs.
 RANDOM_SEED = 42
+
+# ─── Train/Test Split ───
+# 80/20 split: standard ratio. With N=272, gives ~218 train, ~54 test.
+# Sufficient for GMM density estimation on 2D data.
+TEST_RATIO = 0.2
+
+# ─── Cross-Validation ───
+# K=5 folds: standard choice. Each fold ~44 points from train set.
+N_FOLDS = 5
+
+# ─── Model Selection ───
+# Test K=1 through 5 components. K=1 is the single-Gaussian baseline.
+K_VALUES = [1, 2, 3, 4, 5]

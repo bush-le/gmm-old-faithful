@@ -1,0 +1,25 @@
+FINAL TEST-SET EVALUATION
+==================================================
+⚠️  Test set used exactly ONCE (§10.2 Rule 4)
+
+Test samples:        60
+Test LL:             -96.7094
+Avg test LL:         -1.6118
+Test BIC:            238.4566
+Test AIC:            215.4188
+Test Silhouette:     0.6862
+Test Separation:     2.5023
+
+Baseline comparison:
+  K=1 Gaussian avg LL: -2.0097
+  GMM improvement:     +0.3979
+
+CV estimate vs actual:
+  CV avg LL:   -1.4933 ± 0.1782
+  Actual:      -1.6118
+  Gap:         0.1186
+
+Generalization gap (§13):
+  Train avg LL: -1.4375
+  Test avg LL:  -1.6118
+  Gap:          0.1744
