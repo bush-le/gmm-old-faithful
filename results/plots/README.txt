@@ -13,19 +13,11 @@ PLOT INVENTORY — GMM Old Faithful Pipeline (v2 Refactored)
   04_split_distribution.png
     → Train/test split distribution comparison
 
-  05_outliers_boxplot.png
-
   06_outliers_boxplot.png
     → IQR outlier detection results (bounds from train)
 
   10_engineered_features.png
     → Engineered feature distributions (interaction, polynomial)
-
-  11_gmm_bic_aic.png
-
-  11_gmm_convergence.png
-
-  11_gmm_result.png
 
   13_gmm_convergence.png
     → EM convergence (log-likelihood + delta per iteration)
@@ -47,5 +39,3 @@ PLOT INVENTORY — GMM Old Faithful Pipeline (v2 Refactored)
 
   18_error_analysis.png
     → Lowest-likelihood test points highlighted
-
-  raw_data_standardized.png

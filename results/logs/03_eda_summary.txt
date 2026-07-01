@@ -29,7 +29,7 @@ LENS 2 — UNIVARIATE DISTRIBUTIONS
     Std:      1.1460
     Skewness: -0.4523
     Kurtosis: -1.4197
-    Assessment: Approximately symmetric → mean is representative
+    Assessment (eruptions): Approximately symmetric → mean is representative
 
   waiting:
     Mean:     72.2886
@@ -37,7 +37,7 @@ LENS 2 — UNIVARIATE DISTRIBUTIONS
     Std:      13.8832
     Skewness: -0.3342
     Kurtosis: -1.0138
-    Assessment: Approximately symmetric → mean is representative
+    Assessment (waiting): Approximately symmetric → mean is representative
 
 ============================================================
 LENS 3 — MULTIVARIATE RELATIONSHIPS

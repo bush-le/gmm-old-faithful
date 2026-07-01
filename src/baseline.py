@@ -154,10 +154,6 @@ def run_baselines(X_train, X_test, K, seed, logs_dir):
 
     os.makedirs(logs_dir, exist_ok=True)
 
-    print("\n" + "=" * 60)
-    print("STAGE 11 — BASELINE COMPARISON")
-    print("=" * 60)
-
     results = {}
 
     # ── Baseline 1: Single Gaussian (K=1) ──

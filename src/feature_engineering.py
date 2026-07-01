@@ -65,14 +65,10 @@ def create_engineered_features(X, feature_names):
     # Stack into augmented array: [eruptions, waiting, eruptions×waiting, eruptions²]
     X_augmented = np.column_stack([X, interaction, eruptions_sq])
 
-    # Build augmented feature names
     augmented_names = list(feature_names) + [
         f'{feature_names[0]}×{feature_names[1]}',
         f'{feature_names[0]}²',
     ]
-
-    print(f"  Feature engineering: {X.shape[1]} → {X_augmented.shape[1]} features")
-    print(f"  New features: {augmented_names[2:]}")
 
     return X_augmented, augmented_names
 

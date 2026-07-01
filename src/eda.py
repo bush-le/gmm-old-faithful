@@ -216,7 +216,7 @@ def run_univariate_analysis(X, feature_names, plots_dir, log_lines):
             assessment = "Approximately symmetric → mean is representative"
         else:
             assessment = "Skewed → use median; consider log transform"
-        log_lines.append(f"    Assessment: {assessment}")
+        log_lines.append(f"    Assessment ({name}): {assessment}")
         
         # Histogram
         ax.hist(col, bins=25, density=True, alpha=0.6, color='#3498DB',
@@ -368,9 +368,6 @@ def run_eda(X, feature_names, plots_dir, logs_dir):
     Returns:
         list: Log lines for reference.
     """
-    print("\n" + "=" * 60)
-    print("STAGE 03 — EXPLORATORY DATA ANALYSIS (EDA)")
-    print("=" * 60)
     
     log_lines = []
     log_lines.append("EXPLORATORY DATA ANALYSIS — OLD FAITHFUL GEYSER")

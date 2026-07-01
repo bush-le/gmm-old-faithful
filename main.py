@@ -44,8 +44,12 @@ from config import (
 )
 
 
+import shutil
+
 def setup_directories():
-    """Create the results/ directory hierarchy including experiments/."""
+    """Create the results/ directory hierarchy including experiments/. Clears old results first."""
+    if os.path.exists(RESULTS_DIR):
+        shutil.rmtree(RESULTS_DIR)
     for d in [RESULTS_DIR, PLOTS_DIR, LOGS_DIR, METRICS_DIR, MODELS_DIR, EXPERIMENTS_DIR]:
         os.makedirs(d, exist_ok=True)
     print("  Results directories ready (including experiments/).")
