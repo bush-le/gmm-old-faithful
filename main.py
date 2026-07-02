@@ -288,7 +288,38 @@ def main():
 
     from src.em import fit_gmm, compute_log_likelihood
     from src.visualization import (plot_raw_data, plot_gmm_ellipses,
-                                    plot_convergence, plot_bic_aic)
+                                    plot_convergence, plot_bic_aic,
+                                    plot_cv_results, plot_gmm_pdf_surface,
+                                    plot_silhouette_profile,
+                                    plot_kmeans_result, plot_gmm_decision_boundary,
+                                    plot_hierarchical_result, plot_knn_result,
+                                    plot_final_comparison)
+
+    # Plot K-Means baseline
+    print("  Plotting K-Means Baseline...")
+    plot_kmeans_result(
+        X_train_scaled, 
+        baseline_results['kmeans']['train_labels'],
+        baseline_results['kmeans']['train_centroids'],
+        os.path.join(PLOTS_DIR, "11_kmeans_baseline.png")
+    )
+    
+    # Plot Hierarchical baseline
+    print("  Plotting Hierarchical Baseline...")
+    plot_hierarchical_result(
+        X_train_scaled,
+        baseline_results['hierarchical']['train_labels'],
+        os.path.join(PLOTS_DIR, "11_hierarchical_baseline.png")
+    )
+    
+    # Plot KNN baseline
+    print("  Plotting KNN Baseline...")
+    plot_knn_result(
+        X_test_scaled,
+        baseline_results['knn']['test_labels'],
+        os.path.join(PLOTS_DIR, "11_knn_baseline.png")
+    )
+
 
     # Plot standardized training data
     print("\n[1] Plotting standardized training data...")
@@ -349,6 +380,10 @@ def main():
                       os.path.join(PLOTS_DIR, "13_gmm_result.png"))
     plot_convergence(log_likelihoods,
                      os.path.join(PLOTS_DIR, "13_gmm_convergence.png"))
+    plot_gmm_pdf_surface(X_train_scaled, params,
+                         os.path.join(PLOTS_DIR, "13_gmm_pdf_surface.png"))
+    plot_gmm_decision_boundary(X_train_scaled, params,
+                               os.path.join(PLOTS_DIR, "13_gmm_decision_boundary.png"))
 
     # Save model parameters
     print("\n[5] Saving model parameters...")
@@ -564,6 +599,19 @@ def main():
                 bbox_inches='tight', dpi=150)
     plt.close()
 
+    print("  Plotting Silhouette Profile...")
+    plot_silhouette_profile(X_train_scaled, train_labels,
+                            os.path.join(PLOTS_DIR, "15_silhouette_profile.png"))
+
+    print("  Plotting Final Model Comparison...")
+    plot_final_comparison(
+        X_train_scaled, 
+        train_labels, 
+        baseline_results['kmeans']['train_labels'], 
+        baseline_results['hierarchical']['train_labels'],
+        os.path.join(PLOTS_DIR, "21_final_comparison.png")
+    )
+
     # ═══════════════════════════════════════════════════════════════
     # STAGE 16 — K-Fold Cross-Validation (§17)
     # ═══════════════════════════════════════════════════════════════
@@ -582,6 +630,9 @@ def main():
     )
 
     log_cv_results(cv_results, K, N_FOLDS, LOGS_DIR, METRICS_DIR)
+
+    print("  Plotting CV Results...")
+    plot_cv_results(cv_results, os.path.join(PLOTS_DIR, "16_cv_results.png"))
 
     # ═══════════════════════════════════════════════════════════════
     # STAGE 17 — Final Test-Set Evaluation (ONCE, §10.2 Rule 4)

@@ -151,6 +151,8 @@ def run_baselines(X_train, X_test, K, seed, logs_dir):
     """
     from src.kmeans import fit_kmeans
     from src.metrics import silhouette_score, cluster_separation
+    from src.knn import fit_predict_knn
+    from src.hierarchical import fit_predict_hierarchical
 
     os.makedirs(logs_dir, exist_ok=True)
 
@@ -198,6 +200,34 @@ def run_baselines(X_train, X_test, K, seed, logs_dir):
 
     print(f"  Train silhouette: {train_sil:.4f}, separation: {train_sep:.4f}")
     print(f"  Test  silhouette: {test_sil:.4f}, separation: {test_sep:.4f}")
+
+    # ── Baseline 3: K-Nearest Neighbors (KNN) ──
+    print(f"\n[Baseline 3] K-Nearest Neighbors (KNN k=3)...")
+    # Pseudo-labels from KMeans
+    test_labels_knn = fit_predict_knn(X_train, train_labels, X_test, k=3)
+    test_sil_knn = silhouette_score(X_test, test_labels_knn)
+    test_sep_knn = cluster_separation(X_test, test_labels_knn)
+    
+    results['knn'] = {
+        'test_labels': test_labels_knn,
+        'test_silhouette': test_sil_knn,
+        'test_separation': test_sep_knn,
+    }
+    print(f"  Test  silhouette: {test_sil_knn:.4f}, separation: {test_sep_knn:.4f}")
+
+    # ── Baseline 4: Hierarchical Clustering ──
+    print(f"\n[Baseline 4] Hierarchical Clustering (K={K})...")
+    # Fit on training data
+    train_labels_hc = fit_predict_hierarchical(X_train, n_clusters=K, linkage='average')
+    train_sil_hc = silhouette_score(X_train, train_labels_hc)
+    train_sep_hc = cluster_separation(X_train, train_labels_hc)
+    
+    results['hierarchical'] = {
+        'train_labels': train_labels_hc,
+        'train_silhouette': train_sil_hc,
+        'train_separation': train_sep_hc,
+    }
+    print(f"  Train silhouette: {train_sil_hc:.4f}, separation: {train_sep_hc:.4f}")
 
     # ── Cluster size summary for K-Means ──
     for split_name, labels in [('Train', train_labels), ('Test', test_labels)]:
