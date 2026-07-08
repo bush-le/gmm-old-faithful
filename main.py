@@ -12,7 +12,7 @@ Runs the complete GMM pipeline end-to-end following ML_PIPELINE_REFERENCE_v2.md:
   Stage 07: Feature scaling (fit on train only, §6)
   Stage 08: Categorical encoding — SKIPPED (all numeric)
   Stage 09: Class imbalance — SKIPPED (unsupervised)
-  Stage 10: Feature engineering (§9.9)
+  Stage 10: Feature engineering — SKIPPED (§9.9)
   Stage 11: Baseline models (§11)
   Stage 13: GMM training on TRAIN set (EM algorithm)
   Stage 14: Hyperparameter tuning (§14, §15, §18.3)
@@ -232,33 +232,21 @@ def main():
         f.write("Ref: ML_PIPELINE_REFERENCE.md §8\n")
 
     # ═══════════════════════════════════════════════════════════════
-    # STAGE 10 — Feature Engineering (§9.9)
+    # STAGE 10 — Feature Engineering — SKIPPED (§9.9)
     # ═══════════════════════════════════════════════════════════════
     print("\n" + "=" * 60)
-    print("STAGE 10 — FEATURE ENGINEERING (§9.9)")
+    print("STAGE 10 — FEATURE ENGINEERING — SKIPPED (§9.9)")
     print("=" * 60)
+    print("  GMM will be trained on the 2 original variables (2D).")
+    print("  Polynomial features (eruptions x waiting, eruptions^2) are redundant.")
+    print("  Decision: SKIP")
 
-    from src.feature_engineering import create_engineered_features, log_feature_engineering
-
-    # Create engineered features on raw (pre-scaled) data
-    X_train_aug_raw, aug_names = create_engineered_features(X_train_clean, feature_names)
-    X_test_aug_raw, _ = create_engineered_features(X_test_clean, feature_names)
-
-    print(f"  Original features: {feature_names}")
-    print(f"  Engineered features: {aug_names[len(feature_names):]}")
-    print(f"  Total features: {len(aug_names)}")
-
-    # Scale augmented features (fit on train augmented)
-    aug_scaler = fit_scaler(X_train_aug_raw)
-    X_train_aug_scaled = transform_scaler(X_train_aug_raw, aug_scaler)
-    X_test_aug_scaled = transform_scaler(X_test_aug_raw, aug_scaler)
-
-    log_feature_engineering(X_train_clean, X_train_aug_raw,
-                            feature_names, aug_names, LOGS_DIR, PLOTS_DIR)
-
-    # NOTE: We will test GMM with ORIGINAL 2D features (primary)
-    # and compare with augmented 4D features to see if engineering helps.
-    # Primary pipeline uses 2D (eruptions, waiting) for the GMM.
+    skip_log = os.path.join(LOGS_DIR, "10_feature_engineering.txt")
+    with open(skip_log, 'w') as f:
+        f.write("FEATURE ENGINEERING — SKIPPED\n")
+        f.write("=" * 40 + "\n")
+        f.write("Reason: GMM will be trained on the 2 original variables (2D).\n")
+        f.write("Creating 4D features but dropping them in training breaks pipeline logic.\n")
 
     # ═══════════════════════════════════════════════════════════════
     # STAGE 11 — Baseline Models (§11)
@@ -635,6 +623,29 @@ def main():
     plot_cv_results(cv_results, os.path.join(PLOTS_DIR, "16_cv_results.png"))
 
     # ═══════════════════════════════════════════════════════════════
+    # STAGE 18 — Statistical Validation (Bootstrap) (§18.4)
+    # ═══════════════════════════════════════════════════════════════
+    print("\n" + "=" * 60)
+    print("STAGE 18 — STATISTICAL VALIDATION (BOOTSTRAP) (§18.4)")
+    print("=" * 60)
+    print("  Bootstrapping on Training Data to establish Confidence Intervals.")
+    
+    from src.statistical_validation import bootstrap_gmm_evaluation, log_bootstrap_results
+    from src.visualization import plot_bootstrap_results
+    
+    # Using 50 iterations as a sensible default for the pipeline
+    BOOTSTRAP_ITERS = 50
+    bootstrap_results = bootstrap_gmm_evaluation(
+        X_train_clean, K, B=BOOTSTRAP_ITERS, max_iters=MAX_ITERS, 
+        tol=TOL, reg_covar=REG_COVAR, init_method=INIT_METHOD, seed=RANDOM_SEED
+    )
+    
+    log_bootstrap_results(bootstrap_results, K, LOGS_DIR, METRICS_DIR)
+    
+    print("  Plotting Bootstrap Results...")
+    plot_bootstrap_results(bootstrap_results, os.path.join(PLOTS_DIR, "18_bootstrap_results.png"))
+
+    # ═══════════════════════════════════════════════════════════════
     # STAGE 17 — Final Test-Set Evaluation (ONCE, §10.2 Rule 4)
     # ═══════════════════════════════════════════════════════════════
     print("\n" + "=" * 60)
@@ -947,13 +958,14 @@ def main():
     print(f"    ✅ 07 — Feature scaling (fit on train only)")
     print(f"    ⏭️  08 — Categorical encoding (SKIPPED — all numeric)")
     print(f"    ⏭️  09 — Class imbalance (SKIPPED — unsupervised)")
-    print(f"    ✅ 10 — Feature engineering (2 new features)")
+    print(f"    ⏭️  10 — Feature engineering (SKIPPED — redundant for GMM)")
     print(f"    ✅ 11 — Baseline models (single Gaussian + K-Means)")
     print(f"    ✅ 13 — GMM training (K={K}, {n_iters} iters, TRAIN only)")
     print(f"    ✅ 14 — Hyperparameter tuning (3 experiments)")
     print(f"    ✅ 15 — Evaluation metrics")
     print(f"    ✅ 16 — {N_FOLDS}-Fold cross-validation (μ±σ)")
-    print(f"    ✅ 17 — Final test evaluation (ONCE)")
+    print(f"    ✅ 18 — Bootstrap Statistical Validation (B={BOOTSTRAP_ITERS}, 95% CI)")
+    print(f"    ✅ 17 — Final Test-Set Evaluation (Strictly isolated)")
     print(f"    ✅ 18 — Error analysis")
     print(f"    ✅ 19 — Plot inventory")
     print(f"    ✅ 20 — Interpretability notes")

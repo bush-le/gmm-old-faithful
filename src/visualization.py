@@ -327,6 +327,57 @@ def plot_cv_results(cv_results, save_path):
     plt.close()
     print(f"  Saved: {save_path}")
 
+def plot_bootstrap_results(results, save_path):
+    """
+    Plot histograms of bootstrap validation results with 95% confidence intervals.
+    """
+    setup_plot_style()
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+    axes = axes.flatten()
+    
+    def plot_hist(ax, data, mean, ci, title, xlabel, color):
+        ax.hist(data, bins=15, color=color, alpha=0.7, edgecolor='black')
+        ax.axvline(mean, color='#E74C3C', linestyle='dashed', linewidth=2, label=f"Mean: {mean:.4f}")
+        ax.axvline(ci[0], color='#2ECC71', linestyle='dotted', linewidth=2, label=f"95% CI L: {ci[0]:.4f}")
+        ax.axvline(ci[1], color='#2ECC71', linestyle='dotted', linewidth=2, label=f"95% CI U: {ci[1]:.4f}")
+        ax.set_title(title)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel('Frequency')
+        ax.legend()
+    
+    # Log-Likelihood Histogram
+    plot_hist(axes[0], results['ll_scores'], results['ll_mean'], results['ll_ci_95'], 'OOB Avg Log-Likelihood', 'Avg Log-Likelihood', '#3498DB')
+    
+    # Silhouette Score Histogram
+    plot_hist(axes[1], results['sil_scores'], results['sil_mean'], results['sil_ci_95'], 'OOB Silhouette Score', 'Silhouette Score', '#9B59B6')
+    
+    # BIC Histogram
+    if 'bic_scores' in results:
+        plot_hist(axes[2], results['bic_scores'], results['bic_mean'], results['bic_ci_95'], 'OOB BIC Score (Lower = Better)', 'BIC', '#E67E22')
+    else:
+        axes[2].axis('off')
+        
+    # AIC Histogram
+    if 'aic_scores' in results:
+        plot_hist(axes[3], results['aic_scores'], results['aic_mean'], results['aic_ci_95'], 'OOB AIC Score (Lower = Better)', 'AIC', '#F1C40F')
+    else:
+        axes[3].axis('off')
+        
+    # Cluster Separation Histogram
+    if 'sep_scores' in results:
+        plot_hist(axes[4], results['sep_scores'], results['sep_mean'], results['sep_ci_95'], 'OOB Cluster Separation', 'Separation Distance', '#1ABC9C')
+    else:
+        axes[4].axis('off')
+        
+    axes[5].axis('off')
+
+    plt.suptitle(f"Bootstrap Statistical Validation (B={results['B']})", fontsize=16, fontweight='bold')
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    plt.tight_layout()
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close()
+    print(f"  Saved: {save_path}")
+
 def plot_gmm_pdf_surface(X, params, save_path):
     """
     Plot the 3D surface and 2D contour of the fitted GMM probability density function.

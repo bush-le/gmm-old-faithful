@@ -16,9 +16,6 @@ PLOT INVENTORY — GMM Old Faithful Pipeline (v2 Refactored)
   06_outliers_boxplot.png
     → IQR outlier detection results (bounds from train)
 
-  10_engineered_features.png
-    → Engineered feature distributions (interaction, polynomial)
-
   11_hierarchical_baseline.png
 
   11_kmeans_baseline.png
@@ -50,6 +47,8 @@ PLOT INVENTORY — GMM Old Faithful Pipeline (v2 Refactored)
   15_silhouette_profile.png
 
   16_cv_results.png
+
+  18_bootstrap_results.png
 
   18_error_analysis.png
     → Lowest-likelihood test points highlighted

@@ -1,0 +1,24 @@
+STATISTICAL VALIDATION (BOOTSTRAP) RESULTS
+============================================================
+Number of iterations (B): 50
+Components (K): 2
+
+Out-Of-Bag (OOB) Log-Likelihood:
+  Mean: -1.5421
+  95% Confidence Interval: [-1.8393, -1.3162]
+
+Out-Of-Bag (OOB) Silhouette Score:
+  Mean: 0.7460
+  95% Confidence Interval: [0.7114, 0.7692]
+
+Out-Of-Bag (OOB) BIC Score:
+  Mean: 318.2380
+  95% Confidence Interval: [268.5668, 386.7689]
+
+Out-Of-Bag (OOB) AIC Score:
+  Mean: 291.1045
+  95% Confidence Interval: [241.7792, 358.5142]
+
+Out-Of-Bag (OOB) Cluster Separation:
+  Mean: 2.7521
+  95% Confidence Interval: [2.5148, 3.0147]
